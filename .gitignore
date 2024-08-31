@@ -1,2 +1,12 @@
 node_modules/
-.env
+Docker/.env
+secret
+src/**
+dist/**
+
+#after the 1st/2st/3st commit 
+# testing  do not modified project files
+
+tmp
+#package.json
+#package-lock.json
