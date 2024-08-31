@@ -66,10 +66,6 @@ services:
         condition: service_healthy
       app_test:
         condition: service_completed_successfully
-      app_api:
-        condition: service_completed_successfully
-      app_web:
-        condition: service_completed_successfully
 
         #condition: service_completed_successfully
     environment:
@@ -114,6 +110,8 @@ services:
         condition: service_healthy
       app_test:
         condition: service_completed_successfully
+      app_webpack:
+        condition: service_completed_successfully
     #ports:
     #  - "3001:3001"
     #  - ":3001"
@@ -149,6 +147,8 @@ services:
       database:
         condition: service_healthy
       app_test:
+        condition: service_completed_successfully
+      app_webpack:
         condition: service_completed_successfully
     ports:
       - "3000:3000"
