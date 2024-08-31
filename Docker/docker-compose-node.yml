@@ -20,6 +20,7 @@ services:
         #DB_PASSWORD: ${DB_PASSWORD}
         # DB_PASSWORD:/run/secrets/db_password
         #DB_NAME: ${DB_NAME}
+    #restart: unless-stopped
     #restart: always
     depends_on:
       database:
@@ -27,6 +28,7 @@ services:
         #condition: service_completed_successfully
     environment:
       API_BASE_URL: ${API_BASE_URL:-http://localhost:3000}
+      WEB_BASE_URL: ${WEB_BASE_URL:-http://localhost:3001}
       #http://localhost:${PORT}}
       PORT: ${PORT:-3000}
       WEB_PORT: ${WEB_PORT:-3001}
@@ -36,8 +38,8 @@ services:
       # DB_PASSWORD:/run/secrets/db_password
       DB_NAME: ${DB_NAME:-default-db}
     volumes:
-      - ./api:/api
-      - ./web:/web
+      - ../api:/home/node/app/api
+      #- ../web:/home/node/app/web
     #healthcheck:
     #  disable: true
 
@@ -49,7 +51,8 @@ services:
     build:
       dockerfile: ./Docker/Dockerfile.node
       context: ../
-    command: bash -c ../Docker/build.webpack.sh 
+    #command: tail -f /dev/null 
+    command: bash -c  ./build.webpack.sh 
       #args:
         #DB_HOST: ${DB_HOST}
         #DB_HOST: containerdb
@@ -57,16 +60,21 @@ services:
         #DB_PASSWORD: ${DB_PASSWORD}
         # DB_PASSWORD:/run/secrets/db_password
         #DB_NAME: ${DB_NAME}
-    #restart: always
+    #restart: unless-stopped
     depends_on:
       database:
         condition: service_healthy
       app_test:
         condition: service_completed_successfully
+      app_api:
+        condition: service_completed_successfully
+      app_web:
+        condition: service_completed_successfully
 
         #condition: service_completed_successfully
     environment:
       API_BASE_URL: ${API_BASE_URL:-http://localhost:3000}
+      WEB_BASE_URL: ${WEB_BASE_URL:-http://localhost:3001}
       #http://localhost:${PORT}}
       PORT: ${PORT:-3000}
       WEB_PORT: ${WEB_PORT:-3001}
@@ -76,8 +84,8 @@ services:
       # DB_PASSWORD:/run/secrets/db_password
       DB_NAME: ${DB_NAME:-default-db}
     volumes:
-      - ./api:/api
-      - ./web:/web
+      - ../api:/home/node/app/api
+      - ../web:/home/node/app/web
     #healthcheck:
     #  disable: true
 
@@ -111,6 +119,7 @@ services:
     #  - ":3001"
     environment:
       API_BASE_URL: ${API_BASE_URL:-http://localhost:3000}
+      WEB_BASE_URL: ${WEB_BASE_URL:-http://localhost:3001}
       PORT: ${PORT:-3000}
       WEB_PORT: ${WEB_PORT:-3001}
       DB_HOST: ${DB_HOST:-containerdb}
@@ -120,8 +129,8 @@ services:
       DB_NAME: ${DB_NAME:-default-db}
 
     volumes:
-      - ./api:/api
-      - ./web:/web
+      - ../api:/home/node/app/api
+      - ../web:/home/node/app/web
     #healthcheck:
     #  disable: true
 
@@ -147,6 +156,7 @@ services:
       #- ":3000"
     environment:
       API_BASE_URL: ${API_BASE_URL:-http://localhost:3000}
+      WEB_BASE_URL: ${WEB_BASE_URL:-http://localhost:3001}
       PORT: ${PORT:-3000}
       WEB_PORT: ${WEB_PORT:-3001}
       DB_HOST: ${DB_HOST:-containerdb}
@@ -156,8 +166,8 @@ services:
       DB_NAME: ${DB_NAME:-default-db}
 
     volumes:
-      - ./api:/api
-      - ./web:/web
+      - ../api:/home/node/app/api
+      - ../web:/home/node/app/web
 
 
 
@@ -176,7 +186,7 @@ services:
     #  - "3306:3306"
     #- "3306:3306"
     volumes:
-      - ./db/init.sql:/data/application/init.sql
+      - ../db/init.sql:/data/application/init.sql
       - mysql_volume:/var/lib/mysql
     environment:
       #MARIADB_AUTO_UPGRADE: 1
@@ -208,7 +218,7 @@ services:
     image: nginx:alpine
     restart: always
     volumes:
-      - ./Docker/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ../Docker/nginx.conf:/etc/nginx/nginx.conf:ro
     ports:
       - "80:80"
       # - "127.0.0.1:3306:3306"
@@ -247,9 +257,9 @@ volumes:
 
 secrets:
   db_password:
-    file: ./secrets/db_password.txt
+    file: ../Docker/secrets/db_password.txt
   db_root_password:
-    file: ./secrets/db_root_password.txt
+    file: ../Docker/secrets/db_root_password.txt
 
 
 
