@@ -22,10 +22,10 @@ services:
     depends_on:
       database:
         condition: service_healthy
-      app_test:
-        condition: service_completed_successfully
-      app_webpack:
-        condition: service_completed_successfully
+      #app_test:
+      #  condition: service_completed_successfully
+      #app_webpack:
+      #  condition: service_completed_successfully
     #ports:
     #  - "3001:3001"
     #  - ":3001"

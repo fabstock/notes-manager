@@ -16,8 +16,8 @@ services:
         condition: service_healthy
       app_test:
         condition: service_completed_successfully
-      app_webpack:
-        condition: service_completed_successfully
+      #app_webpack:
+      #  condition: service_completed_successfully
     ports:
       - "3000:3000"
       #- "3000:3000"
