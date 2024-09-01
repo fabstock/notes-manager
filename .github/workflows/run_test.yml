@@ -75,7 +75,8 @@ jobs:
         run: |
           env && ls -latr  && pwd 
           docker compose    --file=./Docker/docker-compose-test.yml  --file=./Docker/docker-compose-mysql.yml   build --no-cache
-          docker --debug compose  --file=Docker/docker-compose-mysql.yml  up  -d    --remove-orphans
+          #docker --debug compose  --file=Docker/docker-compose-mysql.yml  up  -d    --remove-orphans
+          docker --debug compose  --file=Docker/docker-compose-mysql.yml      --file=./Docker/docker-compose-test.yml up  -d    --remove-orphans
           #sudo apt-get update
           #sudo apt-install  -y install
           env && ls -latr  && pwd 
