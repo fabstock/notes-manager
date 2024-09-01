@@ -1,17 +1,15 @@
-name: Run docker compose
+name: Build, Test, Push, and Deploy Docker Container
+
 on:
   workflow_dispatch:
   push:
-  pull_request:
-  tags:
-    - 'release-v*'
-  branches:
-    - main
-    - dev
+    branches:
+      - dev  # Ajustez en fonction de votre branche de déploiement
 
 
 permissions:
   contents: write  # Donne les permissions pour écrire les contenus du dépôt
+
     
 
 jobs:
