@@ -21,6 +21,7 @@ services:
         #DB_PASSWORD: ${DB_PASSWORD}
         # DB_PASSWORD:/run/secrets/db_password
         #DB_NAME: ${DB_NAME}
+    restart: on-failure
     #restart: unless-stopped
     #restart: always
     depends_on:

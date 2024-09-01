@@ -7,7 +7,8 @@ services:
     container_name: nginx_proxy
     hostname: nginx_proxy
     image: nginx:alpine
-    restart: always
+    #restart: always
+    restart: unless-stopped
     volumes:
       - ../Docker/nginx.conf:/etc/nginx/nginx.conf:ro
     ports:
@@ -20,15 +21,28 @@ services:
       PORT: ${PORT:-3000}
       WEB_PORT: ${WEB_PORT:-3001}
       MYSQL_HOSTNAME: ${DB_HOST}
-      MYSQL_USER: ${DB_USER}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
-      MYSQL_DATABASE: ${DB_NAME}
+      #MYSQL_USER: ${DB_USER}
+      #MYSQL_PASSWORD: ${DB_PASSWORD}
+      #MYSQL_DATABASE: ${DB_NAME}
+
+    #depends_on:
+      # app_web:
+      #  condition: service_healthy
+      #database:
+      #  condition: service_healthy
+      #app_test:
+      #  condition: service_completed_successfully
 
     #depends_on:
     #  - database
     #  - app_api
     #  - app_web
-
+    #healthcheck:
+    #  test: ["CMD", "curl", "-f", "http://localhost:80/"] # Assurez-vous que /health est un endpoint qui renvoie 200 si l'API est prête
+    #  interval: 30s
+    #  timeout: 10s
+    #  retries: -1
+    #  start_period: 40s
 
 
 

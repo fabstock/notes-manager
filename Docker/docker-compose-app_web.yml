@@ -18,13 +18,16 @@ services:
         #db_password: ${db_password}
         # db_password:/run/secrets/db_password
         #db_name: ${db_name}
-    restart: always
+    #restart: always
+    restart: unless-stopped
     depends_on:
       database:
         condition: service_healthy
+      app_webpack:
+        condition: service_completed_successfully
       #app_test:
       #  condition: service_completed_successfully
-      #app_webpack:
+      #app_api:
       #  condition: service_completed_successfully
     #ports:
     #  - "3001:3001"
@@ -45,7 +48,12 @@ services:
       - ../web:/home/node/app/web
     #healthcheck:
     #  disable: true
-
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/"] # Assurez-vous que /health est un endpoint qui renvoie 200 si l'API est prête
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
 
 
 

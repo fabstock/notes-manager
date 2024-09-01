@@ -19,6 +19,7 @@ services:
         # DB_PASSWORD:/run/secrets/db_password
         #DB_NAME: ${DB_NAME}
     #restart: unless-stopped
+    restart: on-failure
     depends_on:
       #app_api:
       #  condition: service_healthy
@@ -44,7 +45,15 @@ services:
       - ../web:/home/node/app/web
     #healthcheck:
     #  disable: true
+    healthcheck:
+      test: ["CMD", "echo", "koko"] # Assurez-vous que /health est un endpoint qui renvoie 200 si l'API est prête
+      interval: 40s
+      timeout: 15s
+      retries: 0
+      start_period: 55s
 
+
+    
 
 
 

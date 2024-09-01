@@ -10,12 +10,15 @@ services:
       context: ../
     command:  npm --prefix api start
     # command:  npm run-script test --verbose
-    restart: always
+    #restart: always
+    restart: unless-stopped
     depends_on:
       database:
         condition: service_healthy
-      app_test:
+      app_webpack:
         condition: service_completed_successfully
+      #app_test:
+      #  condition: service_completed_successfully
       #app_webpack:
       #  condition: service_completed_successfully
     ports:

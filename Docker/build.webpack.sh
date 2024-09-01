@@ -2,8 +2,9 @@
 set -e 
 
 mkdir -p src 
-cp web/public/index.html src/index.html.template
-cp web/public/app.js src/
+
+#cp web/public/index.html src/index.html.template
+#cp web/public/app.js src/
 
 ln -f -s web dist
 
