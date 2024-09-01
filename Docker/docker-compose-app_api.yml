@@ -1,0 +1,62 @@
+---
+#version: '3.8'
+services:
+  app_api:
+    container_name: app_api
+    hostname: app_api
+    image: fabstock2/notes_manager:app_api-${DOCKERAPP_VERSION}
+    build:
+      dockerfile: ./Docker/Dockerfile.node
+      context: ../
+    command:  npm --prefix api start
+    # command:  npm run-script test --verbose
+    restart: always
+    #depends_on:
+    #  database:
+    #    condition: service_healthy
+    #  app_test:
+    #    condition: service_completed_successfully
+    #  app_webpack:
+    #    condition: service_completed_successfully
+    ports:
+      - "3000:3000"
+      #- "3000:3000"
+      #- ":3000"
+    environment:
+      API_BASE_URL: ${API_BASE_URL:-http://localhost:3000}
+      WEB_BASE_URL: ${WEB_BASE_URL:-http://localhost:3001}
+      PORT: ${PORT:-3000}
+      WEB_PORT: ${WEB_PORT:-3001}
+      DB_HOST: ${DB_HOST:-containerdb}
+      DB_USER: ${DB_USER:-user1}
+      DB_PASSWORD: ${DB_PASSWORD:-password}
+      # DB_PASSWORD:/run/secrets/db_password
+      DB_NAME: ${DB_NAME:-default-db}
+
+    volumes:
+      - ../api:/home/node/app/api
+      - ../web:/home/node/app/web
+
+
+
+
+
+
+networks:
+  nonet:
+  #default:
+  bridge:
+    name: notes-manager
+    #driver_opts:
+    #  com.docker.network.bridge.host_binding_ipv4: "127.0.0.1"
+ 
+#secrets:
+#  db_password:
+#    file: ../Docker/secrets/db_password.txt
+#  db_root_password:
+#    file: ../Docker/secrets/db_root_password.txt
+
+
+
+
+

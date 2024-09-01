@@ -1,0 +1,70 @@
+---
+#version: '3.8'
+
+# mariadb -u notes_user1 -pnotes_user1 -h 127.0.0.1 
+services: 
+  app_webpack:
+    hostname: app_webpack 
+    image: fabstock2/notes_manager:app_webpack-${DOCKERAPP_VERSION}
+    build:
+      dockerfile: ./Docker/Dockerfile.node
+      context: ../
+    #command: tail -f /dev/null 
+    command: bash -c  ./build.webpack.sh 
+      #args:
+        #DB_HOST: ${DB_HOST}
+        #DB_HOST: containerdb
+        #DB_USER: ${DB_USER}
+        #DB_PASSWORD: ${DB_PASSWORD}
+        # DB_PASSWORD:/run/secrets/db_password
+        #DB_NAME: ${DB_NAME}
+    #restart: unless-stopped
+    depends_on:
+      #app_api:
+      #   condition: service_healthy
+      # app_web:
+      #   condition: service_healthy
+      database:
+        condition: service_healthy
+      app_test:
+        condition: service_completed_successfully
+    environment:
+      API_BASE_URL: ${API_BASE_URL:-http://localhost:3000}
+      WEB_BASE_URL: ${WEB_BASE_URL:-http://localhost:3001}
+      #http://localhost:${PORT}}
+      PORT: ${PORT:-3000}
+      WEB_PORT: ${WEB_PORT:-3001}
+      DB_HOST: ${DB_HOST:-containerdb}
+      DB_USER: ${DB_USER:-user1}
+      DB_PASSWORD: ${DB_PASSWORD:-password}
+      # DB_PASSWORD:/run/secrets/db_password
+      DB_NAME: ${DB_NAME:-default-db}
+    volumes:
+      - ../api:/home/node/app/api
+      - ../web:/home/node/app/web
+    #healthcheck:
+    #  disable: true
+
+
+
+
+
+
+networks:
+  nonet:
+  #default:
+  bridge:
+    name: notes-manager
+    #driver_opts:
+    #  com.docker.network.bridge.host_binding_ipv4: "127.0.0.1"
+ 
+#secrets:
+#  db_password:
+#    file: ../Docker/secrets/db_password.txt
+#  db_root_password:
+#    file: ../Docker/secrets/db_root_password.txt
+
+
+
+
+

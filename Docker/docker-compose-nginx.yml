@@ -1,0 +1,55 @@
+---
+#version: '3.8'
+
+# mariadb -u notes_user1 -pnotes_user1 -h 127.0.0.1 
+services: 
+  nginx_proxy:
+    container_name: nginx_proxy
+    hostname: nginx_proxy
+    image: nginx:alpine
+    restart: always
+    volumes:
+      - ../Docker/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "80:80"
+      # - "127.0.0.1:3306:3306"
+
+    environment:
+      API_BASE_URL: ${API_BASE_URL:-http://localhost:3000}
+      WEB_BASE_URL: ${WEB_BASE_URL:-http://localhost:3001}
+      PORT: ${PORT:-3000}
+      WEB_PORT: ${WEB_PORT:-3001}
+      MYSQL_HOSTNAME: ${DB_HOST}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+
+    #depends_on:
+    #  - database
+    #  - app_api
+    #  - app_web
+
+
+
+
+
+networks:
+  nonet:
+  #default:
+  bridge:
+    name: notes-manager
+    #driver_opts:
+    #  com.docker.network.bridge.host_binding_ipv4: "127.0.0.1"
+ 
+
+
+#secrets:
+#  db_password:
+#    file: ../Docker/secrets/db_password.txt
+#  db_root_password:
+#    file: ../Docker/secrets/db_root_password.txt
+
+
+
+
+

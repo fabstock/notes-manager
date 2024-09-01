@@ -17,7 +17,6 @@ sed -i '/const apiUrl = process.env.API_BASE_URL;/a\
 
 ' src/app.js
 
-exit
 
 npm install --save-dev webpack webpack-cli
 npm install --save-dev html-webpack-plugin

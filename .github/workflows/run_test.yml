@@ -58,33 +58,46 @@ jobs:
       - name: Set up Docker
         uses: docker/setup-buildx-action@v2
 
-      #- name: Build the backend image with cache
-      #  uses: docker/build-push-action@v4
-      #  with:
-      #    load: true
-      #    context: ..
-      #    driver-opts: |
-      #      image=fabstock2/notes_manager:node 
-      #      network=host
-      #    file: ./Docker/Dockerfile.node
-      #    cache-from: type=gha,scope=$GITHUB_REF_NAME-Docker-dev
-      #    cache-to: type=gha,scope=$GITHUB_REF_NAME-Docker-dev,mode=max
+      - name: Build the backend image with cache
+        uses: docker/build-push-action@v4
+        with:
+          load: true
+          context: ..
+          file: /home/node/app/Docker/Dockerfile.node
+          cache-from: type=gha,scope=$GITHUB_REF_NAME-Docker-dev
+          cache-to: type=gha,scope=$GITHUB_REF_NAME-Docker-dev,mode=max
 
 
-      - name: start docker compose 
+      - name: build docker compose 
         run: |
-          env && ls -latr  && pwd 
-          docker compose    --file=./Docker/docker-compose-test.yml  --file=./Docker/docker-compose-mysql.yml   build --no-cache
-          #docker --debug compose  --file=Docker/docker-compose-mysql.yml  up  -d    --remove-orphans
-          docker  compose  --file=Docker/docker-compose-mysql.yml      --file=./Docker/docker-compose-test.yml up  -d    --remove-orphans
+          docker compose    --file=./Docker/docker-compose-test.yml  --file=./Docker/docker-compose-mysql.yml    --file=./Docker/docker-compose-app_webpack.yml  --file=./Docker/docker-compose-app_api.yml  --file=./Docker/docker-compose-app_web.yml  build --no-cache
           docker images 
+          #env && ls -latr  && pwd 
+
+
+      - name: test jest with docker compose 
+        run:|   
+          docker  compose  --file=Docker/docker-compose-mysql.yml      --file=./Docker/docker-compose-test.yml up  -d    --remove-orphans
           docker ps -a
-
-          docker  compose  --file=Docker/docker-compose-mysql.yml      --file=./Docker/docker-compose-test.yml logs -f 
-
+          #docker --debug compose  --file=Docker/docker-compose-mysql.yml  up  -d    --remove-orphans 
           #sudo apt-get update
           #sudo apt-install  -y install
           #env && ls -latr  && pwd 
+        
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Push Docker image to Docker Hub
+        run: |
+          docker push fabstock2/app_test-node2
+          docker push fabstock2/app_webpack-node2
+          docker push fabstock2/app_api-node2
+          docker push fabstock2/app_web-node2
+
+
 
        # not prod:  testing only cache for keep package download in /var/cahe/apt/archives/
       - name: 2nd root suid tar after dist-upgrade
@@ -93,8 +106,6 @@ jobs:
           echo $GROUP_ID
           sudo chown root:$GROUP_ID /bin/tar && sudo chmod  ug+ws /bin/tar
           ls -l /bin/tar
-    
-
 
       - name: Set ENV for release Stable or Beta 
         run: |
@@ -105,9 +116,9 @@ jobs:
         #run: echo '$GITHUB_ENV IS_PROD: $IS_PROD IS_BETA: $IS_BETA'
         run: echo "${GITHUB_ENV}  ${IS_PROD}  ${IS_BETA}"
 
-      #  uses: actions/upload-release-asset@v1
-      #  with:
-      #    upload_url: ${{ steps.create_release.outputs.upload_url }}
-      #    asset_path: path_to_your_asset # Remplacez par le chemin vers l'asset que vous souhaitez uploader
-      #    asset_name: your_asset_name.zip # Remplacez par le nom de l'asset
-      #    asset_content_type: application/zip
+
+  build_dockerhub:
+    needs: test_jest
+
+
+

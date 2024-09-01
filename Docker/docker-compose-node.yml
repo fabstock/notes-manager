@@ -60,14 +60,12 @@ services:
         #DB_PASSWORD: ${DB_PASSWORD}
         # DB_PASSWORD:/run/secrets/db_password
         #DB_NAME: ${DB_NAME}
-    #restart: unless-stopped
+    restart: unless-stopped
     depends_on:
       database:
         condition: service_healthy
       app_test:
         condition: service_completed_successfully
-
-        #condition: service_completed_successfully
     environment:
       API_BASE_URL: ${API_BASE_URL:-http://localhost:3000}
       WEB_BASE_URL: ${WEB_BASE_URL:-http://localhost:3001}
