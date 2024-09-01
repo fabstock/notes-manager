@@ -3,7 +3,11 @@
 
 # mariadb -u notes_user1 -pnotes_user1 -h 127.0.0.1 
 services: 
-  
+
+
+
+
+
   database:
     hostname: mysql
     container_name: containerdb
@@ -18,7 +22,7 @@ services:
       - mysql_volume:/var/lib/mysql
     environment:
       #MARIADB_AUTO_UPGRADE: 1
-      #MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: true
+      MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: true
       MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
       #MYSQL_ROOT_PASSWORD: edwin
       #MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
