@@ -1,0 +1,10 @@
+
+MY_SOCKET=/run/mysqld/mysqld.sock 
+
+MYSQL_CONTAINER_IP=192.168.1.12
+
+MYSQL_CONTAINER_PORT=3306
+
+
+socat UNIX-LISTEN:$MY_SOCKET,fork,unlink-early,user=root,group=root,mode=777 TCP:$MYSQL_CONTAINER_IP:$MYSQL_CONTAINER_PORT
+

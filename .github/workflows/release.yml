@@ -1,0 +1,72 @@
+name: Automatic Release
+
+on:
+  push:
+    tags:
+      - 'release-v*'
+    #branches:
+    #  - main
+
+permissions:
+  contents: write  # Donne les permissions pour écrire les contenus du dépôt
+    
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set IS_BETA for release Stable or Beta
+        run: echo "IS_BETA=false" >> $GITHUB_ENV
+
+      - name: view Variable GITHUB_ENV
+        run:  echo "$GITHUB_ENV $IS_BETA"
+
+           
+      - name: Create Release (Beta) 
+        id: create_release_beta
+        if: env.IS_BETA == 'true'
+
+        uses: actions/create-release@v1
+        with:
+          #tag_name: release-v${{ github.run_number }}
+          #release_name: Release ${{ github.run_number }}
+          tag_name:  ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}-Beta
+          #tag_name:  $tag_name
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ github.ref_name }}
+
+
+      - name: Create Release_stable (Stable)
+        id: create_release_stable
+        if: env.IS_BETA != 'true'
+
+        uses: actions/create-release@v1
+        with:
+          #tag_name: release-v${{ github.run_number }}
+          #release_name: Release ${{ github.run_number }}
+          tag_name:  ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}-Stable
+          #tag_name:  $tag_name
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ github.ref_name }}
+
+
+      
+      - name: view Variable GITHUB_ENV
+        run:  echo $GITHUB_ENV $IS_BETA 
+
+
+
+

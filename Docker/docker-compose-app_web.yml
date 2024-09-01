@@ -19,13 +19,13 @@ services:
         # db_password:/run/secrets/db_password
         #db_name: ${db_name}
     restart: always
-    #depends_on:
-    #  database:
-    #    condition: service_healthy
-    #  app_test:
-    #    condition: service_completed_successfully
-    #  app_webpack:
-    #    condition: service_completed_successfully
+    depends_on:
+      database:
+        condition: service_healthy
+      app_test:
+        condition: service_completed_successfully
+      app_webpack:
+        condition: service_completed_successfully
     #ports:
     #  - "3001:3001"
     #  - ":3001"

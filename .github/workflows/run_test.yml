@@ -13,7 +13,7 @@ permissions:
     
 
 jobs:
-  test_jest:
+  build_and_test:
     name: npm test jest 
     runs-on: ubuntu-latest
     #environment: "CICD"
@@ -70,13 +70,13 @@ jobs:
 
       - name: build docker compose 
         run: |
-          docker compose    --file=./Docker/docker-compose-test.yml  --file=./Docker/docker-compose-mysql.yml    --file=./Docker/docker-compose-app_webpack.yml  --file=./Docker/docker-compose-app_api.yml  --file=./Docker/docker-compose-app_web.yml  build --no-cache
+          docker compose    --file=./Docker/docker-compose-test.yml  --file=./Docker/docker-compose-mysql.yml    --file=./Docker/docker-compose-app_webpack.yml  --file=./Docker/docker-compose-app_api.yml  --file=./Docker/docker-compose-app_web.yml /Docker/docker-compose-nginx.yml  build --no-cache
           docker images 
           #env && ls -latr  && pwd 
 
 
       - name: test jest with docker compose 
-        run:|   
+        run: |   
           docker  compose  --file=Docker/docker-compose-mysql.yml      --file=./Docker/docker-compose-test.yml up  -d    --remove-orphans
           docker ps -a
           #docker --debug compose  --file=Docker/docker-compose-mysql.yml  up  -d    --remove-orphans 
@@ -92,11 +92,14 @@ jobs:
 
       - name: Push Docker image to Docker Hub
         run: |
-          docker push fabstock2/app_test-node2
-          docker push fabstock2/app_webpack-node2
-          docker push fabstock2/app_api-node2
-          docker push fabstock2/app_web-node2
+          docker push fabstock2/app_test-node
+          docker push fabstock2/app_webpack-node
+          docker push fabstock2/app_api-node
+          docker push fabstock2/app_web-node
 
+
+
+      
 
 
        # not prod:  testing only cache for keep package download in /var/cahe/apt/archives/
@@ -117,8 +120,54 @@ jobs:
         run: echo "${GITHUB_ENV}  ${IS_PROD}  ${IS_BETA}"
 
 
-  build_dockerhub:
-    needs: test_jest
+deploy:
+    needs: build_and_test
+    runs-on: ubuntu-latest
+    if: success()  # Exécute le déploiement seulement si le job précédent réussit
+
+    steps:
+      - name: Checkout Ansible Playbook
+        uses: actions/checkout@v4
+        with:
+          path: ./  # Chemin vers le répertoire contenant le playbook Ansible
 
 
 
+      - name: Set up Ansible & collection community.docker
+        run: |
+          export DEBIAN_FRONTEND=noninteractive
+          sudo apt-get update -y 
+          sudo apt-get dist-upgrade -y  
+          sudo apt-get -y install ansible 
+          ansible-galaxy collection install community.docker
+
+
+
+      - name: Set up SSH agent and add private key
+        run: |
+          mkdir -p ~/.ssh  
+          /bin/echo "${{ secrets.ANSIBLE_SSH_KEY }}" > ~/.ssh/id_ecdsa  # Crée un fichier pour la clé privée
+          chmod 600 ~/.ssh/id_ecdsa  # Définit les permissions correctes pour la clé
+          eval "$(ssh-agent -s)"  # Démarre ssh-agent
+          ssh-add ~/.ssh/id_ecdsa  # Ajoute la clé privée à l'agent SSH
+          ssh-keyscan -H  ~/.ssh/id_ecdsa ${{ secrets.ANSIBLE_HOST }}  >> ~/.ssh/known_hosts
+
+      - name: Prepare Inventory 
+        run: |
+          echo [server] >ansible/hosts.ini
+          IFS=$'\n' INVENTORY=$(echo -e  "${{ secrets.ANSIBLE_HOST }} ansible_host=${{ secrets.ANSIBLE_HOST }} ansible_ssh_extra_args='-o StrictHostKeyChecking=no -o HostKeyAlgorithms=ecdsa-sha2-nistp256'\n") 
+          echo $INVENTORY >>ansible/hosts.ini
+        
+          echo [server] >ansible/hosts2.ini
+          IFS=$'\n' INVENTORY2=$(printf  "%s ansible_host=%s ansible_ssh_extra_args='-o StrictHostKeyChecking=no -o HostKeyAlgorithms=ecdsa-sha2-nistp256'" "${{ secrets.ANSIBLE_HOST }}" "${{ secrets.ANSIBLE_HOST }}")
+          echo $INVENTORY2 >>ansible/hosts2.ini
+
+
+
+      - name: cat ansible/hosts*
+        run: |
+         cat ansible/hosts.ini
+         cat ansible/hosts2.ini
+          
+      - name: Run Ansible Playbook deploy
+        run: ansible-playbook -i ./ansible/hosts2.ini ./ansible/deploy.yml --user=${{ secrets.ANSIBLE_USER }} -v  ||  ansible-playbook -i ./ansible/hosts.ini ./ansible/deploy.yml --user=${{ secrets.ANSIBLE_USER }}

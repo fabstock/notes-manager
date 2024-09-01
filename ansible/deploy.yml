@@ -1,0 +1,5 @@
+- name: Deploy Docker Container
+  hosts: all
+  become: no
+  tasks:
+    - name: launch docker compose
