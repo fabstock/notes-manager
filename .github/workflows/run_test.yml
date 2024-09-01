@@ -120,7 +120,7 @@ jobs:
         run: echo "${GITHUB_ENV}  ${IS_PROD}  ${IS_BETA}"
 
 
-deploy:
+  deploy:
     needs: build_and_test
     runs-on: ubuntu-latest
     if: success()  # Exécute le déploiement seulement si le job précédent réussit

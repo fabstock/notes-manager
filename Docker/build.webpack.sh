@@ -13,8 +13,6 @@ sed -i '/<script src="app.js"><\/script>/d' src/index.html.template
 sed -i "s|'http:\/\/localhost\:3000';|process.env.API_BASE_URL;|" src/app.js 
 sed -i '/const apiUrl = process.env.API_BASE_URL;/a\
   console.log(`API URL is: ${apiUrl}`);
-  //add by sed in  build.webpack.sh 
-
 ' src/app.js
 
 
