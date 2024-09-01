@@ -1,0 +1,109 @@
+name: Run Tests
+on:
+  workflow_dispatch:
+  push:
+  pull_request:
+  tags:
+    - 'release-v*'
+  branches:
+    - main
+    - dev
+
+
+permissions:
+  contents: write  # Donne les permissions pour écrire les contenus du dépôt
+    
+
+jobs:
+  test_jest:
+    name: npm test jest 
+    runs-on: ubuntu-latest
+    #environment: "CICD"
+    #needs:
+    permissions:
+      contents: write
+      issues: read
+      deployments: write
+
+    steps:
+
+
+      # not prod:  testing only cache for keep package download in /var/cahe/apt/archives/
+      - name: 1st root suid tar
+        run: |
+          export GROUP_ID=$(echo $(id -un))
+          echo $GROUP_ID
+          sudo chown root:$GROUP_ID /bin/tar && sudo chmod ug+ws /bin/tar
+          ls -l /bin/tar
+
+      - name: Set up caching for APT archives
+        uses: actions/cache@v3
+        with:
+          path: /var/cache/apt/archives
+          #key: ${{ runner.os }}-apt-archives-${{ hashFiles('apt-packages.txt') }}
+          key: ${{ runner.os }}-apt-archives-
+          restore-keys: |
+            ${{ runner.os }}-apt-archives-
+        #${{ runner.os }}-apt-archives-
+
+
+      - name: Git branch name
+        id: git-branch-name
+        uses: EthanSK/git-branch-name-action@v1
+      - name: Echo the branch name
+        run: echo "Branch name ${GIT_BRANCH_NAME}"
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v2
+
+      #- name: Build the backend image with cache
+      #  uses: docker/build-push-action@v4
+      #  with:
+      #    load: true
+      #    context: ..
+      #    driver-opts: |
+      #      image=fabstock2/notes_manager:node 
+      #      network=host
+      #    file: ./Docker/Dockerfile.node
+      #    cache-from: type=gha,scope=$GITHUB_REF_NAME-Docker-dev
+      #    cache-to: type=gha,scope=$GITHUB_REF_NAME-Docker-dev,mode=max
+
+
+      - name: start docker compose 
+        run: |
+          env && ls -latr  && pwd 
+          docker compose    --file=./Docker/docker-compose-test.yml  --file=./Docker/docker-compose-mysql.yml   build --no-cache
+          docker --debug compose  --file=Docker/docker-compose-mysql.yml  up  -d    --remove-orphans
+          #sudo apt-get update
+          #sudo apt-install  -y install
+          env && ls -latr  && pwd 
+
+       # not prod:  testing only cache for keep package download in /var/cahe/apt/archives/
+      - name: 2nd root suid tar after dist-upgrade
+        run: |
+          export GROUP_ID=$(echo $(id -un))
+          echo $GROUP_ID
+          sudo chown root:$GROUP_ID /bin/tar && sudo chmod  ug+ws /bin/tar
+          ls -l /bin/tar
+    
+
+
+      - name: Set ENV for release Stable or Beta 
+        run: |
+          echo "IS_PROD=false" >> $GITHUB_ENV
+          echo "IS_BETA=true" >> $GITHUB_ENV
+
+      - name: view Variable GITHUB_ENV
+        #run: echo '$GITHUB_ENV IS_PROD: $IS_PROD IS_BETA: $IS_BETA'
+        run: echo "${GITHUB_ENV}  ${IS_PROD}  ${IS_BETA}"
+
+      #  uses: actions/upload-release-asset@v1
+      #  with:
+      #    upload_url: ${{ steps.create_release.outputs.upload_url }}
+      #    asset_path: path_to_your_asset # Remplacez par le chemin vers l'asset que vous souhaitez uploader
+      #    asset_name: your_asset_name.zip # Remplacez par le nom de l'asset
+      #    asset_content_type: application/zip
