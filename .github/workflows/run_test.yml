@@ -70,7 +70,8 @@ jobs:
 
       - name: build docker compose 
         run: |
-          docker compose    --file=./Docker/docker-compose-test.yml  --file=./Docker/docker-compose-mysql.yml    --file=./Docker/docker-compose-app_webpack.yml  --file=./Docker/docker-compose-app_api.yml  --file=./Docker/docker-compose-app_web.yml /Docker/docker-compose-nginx.yml  build --no-cache
+          docker compose    --file=./Docker/docker-compose-test.yml --file=Docker/docker-compose-mysql.yml --file=./Docker/docker-compose-app_webpack.yml  --file=./Docker/docker-compose-app_api.yml  --file=./Docker/docker-compose-app_web.yml  build --no-cache
+          #/Docker/docker-compose-nginx.yml  
           docker images 
           #env && ls -latr  && pwd 
 
