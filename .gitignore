@@ -13,5 +13,8 @@ tmp
 package.json
 package-lock.json
 
+src/**
+web/public/app.js
+web/public/index.html
 web/public/bundle.js
 

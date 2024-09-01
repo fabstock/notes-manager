@@ -3,16 +3,17 @@ set -e
 
 mkdir -p src 
 
-#cp web/public/index.html src/index.html.template
-#cp web/public/app.js src/
+cp web/public/index.html src/index.html.template
+cp web/public/app.js src/
 
-ln -f -s web dist
+ln -f -s ./web dist
 
 
-sed -i '/<script src="app.js"><\/script>/d' src/index.html.template
+sed -i.bak '/<script src="app.js"><\/script>/d' src/index.html.template
 
-sed -i "s|'http:\/\/localhost\:3000';|process.env.API_BASE_URL;|" src/app.js 
-sed -i '/const apiUrl = process.env.API_BASE_URL;/a\
+sed -i.bak.bak  "s|'http:\/\/localhost\:3000';|process.env.API_BASE_URL;|" src/app.js 
+
+sed -i.bak '/const apiUrl = process.env.API_BASE_URL;/a\
   console.log(`API URL is: ${apiUrl}`);
 ' src/app.js
 
