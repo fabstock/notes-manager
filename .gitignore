@@ -1,6 +1,8 @@
 node_modules/
-Docker/.env
-secret
+.env*
+secrets/**
+#Docker/.env*
+Docker/secrets/**
 src/**
 dist/**
 

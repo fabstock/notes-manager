@@ -1,0 +1,111 @@
+---
+#version: '3.8'
+
+# mariadb -u notes_user1 -pnotes_user1 -h 127.0.0.1 
+services: 
+
+
+  app_test:
+    container_name: app_test
+    hostname: app_test
+    image: fabstock2/notes_manager:app_test-${DOCKERAPP_VERSION}
+    build:
+      dockerfile: ./Docker/Dockerfile.node
+      context: ../
+    command: npm run test  --verbose
+    # command:  npm run-script test --verbose
+      #args:
+        #DB_HOST: ${DB_HOST}
+        #DB_HOST: containerdb
+        #DB_USER: ${DB_USER}
+        #DB_PASSWORD: ${DB_PASSWORD}
+        # DB_PASSWORD:/run/secrets/db_password
+        #DB_NAME: ${DB_NAME}
+    #restart: unless-stopped
+    #restart: always
+    depends_on:
+      database:
+        condition: service_healthy
+        #condition: service_completed_successfully
+    environment:
+      API_BASE_URL: ${API_BASE_URL:-http://localhost:3000}
+      WEB_BASE_URL: ${WEB_BASE_URL:-http://localhost:3001}
+      #http://localhost:${PORT}}
+      PORT: ${PORT:-3000}
+      WEB_PORT: ${WEB_PORT:-3001}
+      DB_HOST: ${DB_HOST:-containerdb}
+      DB_USER: ${DB_USER:-user1}
+      DB_PASSWORD: ${DB_PASSWORD:-password}
+      # DB_PASSWORD:/run/secrets/db_password
+      DB_NAME: ${DB_NAME:-default-db}
+    volumes:
+      - ../api:/home/node/app/api
+      - ../web:/home/node/app/web
+    #healthcheck:
+    #  disable: true
+
+
+
+
+  database:
+    hostname: mysql
+    container_name: containerdb
+    image: mariadb:11-noble
+    command: --bind-address 0.0.0.0  --default-authentication-plugin=mysql_native_password --init-file /data/application/init.sql
+    restart: always
+    #ports:
+    #  - "3306:3306"
+    #- "3306:3306"
+    volumes:
+      - ../db/init.sql:/data/application/init.sql
+      - mysql_volume:/var/lib/mysql
+    environment:
+      #MARIADB_AUTO_UPGRADE: 1
+      MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: true
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      #MYSQL_ROOT_PASSWORD: edwin
+      #MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+      #MYSQL_PASSWORD_FILE: /run/secrets/db_password
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_HOSTNAME: ${DB_HOST}
+    #secrets:
+    #  - db_root_password
+    #  - db_password
+    healthcheck:
+      # test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      # test: ["CMD", "mariadbadmin", "ping", "-h", "localhost"]
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost" , '-u', "${DB_USER}" , "-p${DB_PASSWORD}" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+
+
+
+
+
+networks:
+  nonet:
+  #default:
+  bridge:
+    name: notes-manager
+    #driver_opts:
+    #  com.docker.network.bridge.host_binding_ipv4: "127.0.0.1"
+ 
+volumes:
+  mysql_volume:
+    name: mysql_volume
+
+
+#secrets:
+#  db_password:
+#    file: ../Docker/secrets/db_password.txt
+#  db_root_password:
+#    file: ../Docker/secrets/db_root_password.txt
+
+
+
+
+
