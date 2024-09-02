@@ -1,7 +1,8 @@
 name: |
-   Build (image docker) , Test (npm jest), Push and Deploy with Docker Compose Containers on ...
-   this is a poor man pipeline  ,
-   a Not Optimize & not Secure pipeline for learning
+   Build (image docker) , Test (npm jest), Push and Deploy with Docker Compose Containers on ...\n
+   this is a poor man pipeline  ,\n
+   and a Not Optimize & not Secure pipeline for learning\n
+
 
 on:
   workflow_dispatch:
@@ -279,12 +280,12 @@ jobs:
         
       - name: to remove , test ping .... debug prb temporary
         run: |
-         ping -c 5 37.187.73.64 
-         ping -c 5 cloud.stock.eu.org 
-         cat /etc/resolv.conf
-         cat /etc/hosts 
-         ip a s
-         ip a r
+         ping -c 5 37.187.73.64 || echo 0  
+         ping -c 5 cloud.stock.eu.org || echo 0 
+         cat /etc/resolv.conf || echo 0 
+         cat /etc/hosts  || echo 0
+         ip a s || echo 0
+         ip a r || echo 0
   
       - name: Run deploy  Ansible Playbook
         run: ANSIBLE_STDOUT_CALLBACK=yaml ansible-playbook -i ./ansible/hosts2.ini ./ansible/deploy.yml --user=${{ secrets.ANSIBLE_USER }} -v  ||  ansible-playbook -i ./ansible/hosts.ini ./ansible/deploy.yml --user=${{ secrets.ANSIBLE_USER }}
