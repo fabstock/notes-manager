@@ -2,7 +2,7 @@
 
 
  #  This is a Poor Man Pipeline.
- ##  A Slow ,No Optimize & Not for Safe Work 
+ ##   Slow ,No Optimize & Not for Safe Work 
  ### Pipeline for learning
  
 
@@ -11,11 +11,11 @@
  ### actions/checkout@v4
  - https://github.com/actions/checkout
 
- ### ACT The good friend 
+ ## ACT The good friend 
   - https://github.com/nektos/acthttps://github.com/nektos/act
   
  ``` bash
-  /home/fab/bin/act -s  GITHUB_TOKEN=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  -W  .github/workflows/run_test.yml --defaultbranch dev
+  /home/fab/bin/act -s  GITHUB_TOKEN=ghp_gxFaZa*JaaaaaaaaV-dwbbbbFllae2sS2d4ala9w  -W  .github/workflows/run_test.yml --defaultbranch dev
 
 INFO[0000] Using docker host 'unix:///var/run/docker.sock', and daemon socket 'unix:///var/run/docker.sock'
 [Build (image docker) , Test (npm jest),
@@ -30,29 +30,46 @@ and  Not Optimize & not Secure pipeline for learning
 ...
 ```   
 
- ### And the Ugly Bastards 
+ ## And the Ugly Bastards 
 
- - https://github.com/actions/cache
- - https://github.com/marketplace/actions/start-mariadb
+ #### Github Action(s)
 
- - https://docs.docker.com/build/ci/github-actions/configure-builder/
- - https://github.com/docker/build-push-action
- - https://github.com/docker/setup-buildx-action
+  - https://github.com/actions/cache
+  - https://github.com/marketplace/actions/start-mariadb
 
- - https://github.com/EthanSK/git-branch-name-action
-   https://github.com/marketplace/actions/git-branch-name
+ 
+#### Docker actions
 
-   ## and most bash  isn't it !
-       ##### ( it's not modern !)
+  - https://docs.docker.com/build/ci/github-actions/configure-builder/
+  - https://github.com/docker/build-push-action
+  - https://github.com/docker/setup-buildx-action
+
+
+
+ ####  Ansible/action
+
+  - https://github.com/dawidd6/action-ansible-playbook
+  - .... 
+
+ ####  simple action 
+  - https://github.com/EthanSK/git-branch-name-action
+    https://github.com/marketplace/actions/git-branch-name
+
+
+
+
+ ### and most bash  isn't it !
+  ##### ( it's not modern !)
 
  ### Others: man on work ...!
-    eat your own dog food
-
+  
   - if test or and 
   - secrets variables , environment 
-  - 
+    * eat your own dog food
+ 
 
-   (à étudier - uses: getong/mariadb-action@v1.11 )
+  à étudier 
+  - uses: getong/mariadb-action@v1.11 )
   -  https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners#creating-and-using-secrets-encrypted-variables   
   - https://github.com/appleboy/ssh-action
   
@@ -80,7 +97,7 @@ running
 "172.20.0.3"
 ```
    
- ### Jest npm test
+ ## Jest npm test
 
  -  efface la db éxistante
  -  test écriture dans la db 2 
@@ -108,17 +125,42 @@ Snapshots:   0 total
 Time:        0.817 s
 Ran all test suites.
 
-
-
 ```
 
 
 
 
 
- ### Ansible 
-   
-  - Deploy with ssh key (passphrase .... ) 
+
+
+ ## Deployement with Ansible 
+
+  - ansible/actions
+
+```yaml
+
+- name: Run Ansible Playbook
+        uses: ansible/ansible-action@v2
+        with:
+          playbook: ansible/deploy.yml
+        env:
+          ANSIBLE_HOST: ${{ secrets.ANSIBLE_HOST }}
+          ANSIBLE_USER: ${{ secrets.ANSIBLE_USER }}
+          ANSIBLE_SSH_KEY: ${{ secrets.ANSIBLE_SSH_KEY }}
+
+      - name: Setting up SSH key
+        run: |
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > private_key.pem
+        chmod 600 private_key.pem
+      - name: Run Ansible Playbook
+        run: |
+        sudo apt update
+        sudo apt install -y ansible
+        ansible-playbook -i hosts.ini my-playbook.yml --private-key=private_key.pem --user=${{ secrets.ANSIBLE_USER }}
+
+```
+
+  ### Deploy with ssh key (passphrase .... ) 
 
  ```bash
     localhost [/tmp/tm/notes-manager]$ cat ansible/deploy
@@ -130,14 +172,16 @@ Ran all test suites.
   become: no
   tasks:
 
-  - name: launch docker compose
+  - name:  Start
     shell: echo $(date)
 
-  - name: launch the docker
+  - name: docker container 
     shell: docker ps -a
+
  ```
+
   
-  - Clone a Private Repository  from Github  with ssh key  
+ ### Clone a Private Repository  from Github  with ssh key  
 
  ```bash
  localhost [/tmp/tm/notes-manager]$ cat ansible/clone.yml
@@ -168,18 +212,15 @@ Ran all test suites.
 
 ```
 
- - Clone Repository with path or fine grained token (à suivre)
+ ### Clone Repository with path or fine grained token (à suivre)
 
-```
+```bash
    git clone https://PAT@github.com/<your account or organization>/<repo>.git
    git config credential.helper store 
 
 ```
   
-
-
-
- ### Webpack Just One Time 
+ ## Webpack Just One Time 
   10 years after ... 
    -  https://fr.wikipedia.org/wiki/Webpack
 
@@ -252,9 +293,9 @@ Ran all test suites.
 
 ```
 
-
-
+```bash
  -	localhost [/tmp/tm/notes-manager]$ git diff main..dev -- api/app.js
+```
 
 ```javascript
 	diff --git a/api/app.js b/api/app.js
@@ -309,163 +350,22 @@ localhost [/tmp/tm/notes-manager]$ docker run --network docker_default -e API_BA
 ```
 
 
-```bash
-added 71 packages, and audited 537 packages in 8s
-
-52 packages are looking for funding
-  run `npm fund` for details
-
-found 0 vulnerabilities
-
-added 29 packages, and audited 566 packages in 6s
-
-62 packages are looking for funding
-  run `npm fund` for details
-
-found 0 vulnerabilities
-{
-  NODE_VERSION: '20.17.0',
-  HOSTNAME: '97fceac71e9c',
-  YARN_VERSION: '1.22.22',
-  WEB_PORT: 'WEB_PORT',
-  PORT: '',
-  HOME: '/home/node',
-  DB_NAME: 'notes_manager',
-  MYSQL_ROOT_PASSWORD: 'root',
-  TERM: 'xterm',
-  DOCKERAPP_VERSION: 'node',
-  PATH: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:./node_modules/.bin/',
-  MARIADB_ROOT_PASSWORD: 'root',
-  API_BASE_URL: 'http://app_api',
-  TEST_FAB_ENV: '1',
-  WEB_BASE_URL: 'http://app_web',
-  DB_PASSWORD: 'notes_user1',
-  PWD: '/home/node/app',
-  DB_HOST: 'mysql',
-  DB_USER: 'notes_user1',
-  APP_VERSION: '$(npm pkg get version)'
-}
-asset bundle.js 6.65 KiB [emitted] (name: main)
-asset index.html 794 bytes [emitted]
-./src/app.js 6.6 KiB [built] [code generated]
-webpack 5.94.0 compiled successfully in 300 ms
-```
-
-```bash
-localhost [/tmp/tm/notes-manager]$ dce restart app_api  app_web
-```
-
-```bash
-git checkout main web/public/app.js web/public/index.html
-cp web/public/index.html src/index.html.template
-cp web/public/app.js src/app.js
-
-localhost [/tmp/tm/notes-manager]$ docker run --network docker_default -e API_BASE_URL=app_api  -e WEB_BASE_URL=app_web   -e DB_USER=notes_user1  -e DB_PASSWORD=notes_user1 -e DB_NAME=notes_manager   -e DB_HOST=mysql  -it  --rm  -v  $(pwd)/src:/home/node/app/src     -v $(pwd)/dist:/home/node/app/dist       -v $(pwd)/web:/home/node/app/web  -v $(pwd)/api:/home/node/app/api  fabstock2/notes_manager:app_one-node ./build.webpack.sh
-
-added 71 packages, and audited 537 packages in 8s
-
-52 packages are looking for funding
-  run `npm fund` for details
-
-found 0 vulnerabilities
-
-added 29 packages, and audited 566 packages in 6s
-
-62 packages are looking for funding
-  run `npm fund` for details
-
-found 0 vulnerabilities
-{
-  NODE_VERSION: '20.17.0',
-  HOSTNAME: '6c64675fb735',
-  YARN_VERSION: '1.22.22',
-  WEB_PORT: 'WEB_PORT',
-  PORT: '',
-  HOME: '/home/node',
-  DB_NAME: 'notes_manager',
-  MYSQL_ROOT_PASSWORD: 'root',
-  TERM: 'xterm',
-  DOCKERAPP_VERSION: 'node',
-  PATH: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:./node_modules/.bin/',
-  MARIADB_ROOT_PASSWORD: 'root',
-  API_BASE_URL: 'app_api',
-  TEST_FAB_ENV: '1',
-  WEB_BASE_URL: 'app_web',
-  DB_PASSWORD: 'notes_user1',
-  PWD: '/home/node/app',
-  DB_HOST: 'mysql',
-  DB_USER: 'notes_user1',
-  APP_VERSION: '$(npm pkg get version)'
-}
-asset bundle.js 6.64 KiB [emitted] (name: main)
-asset index.html 794 bytes [emitted]
-./src/app.js 6.6 KiB [built] [code generated]
-webpack 5.94.0 compiled successfully in 328 ms
-```
 
 
 
-```bash
-docker run --network docker_default -e DB_USER=notes_user1  -e DB_PASSWORD=notes_user1 -e DB_NAME=notes_manager   -e DB_HOST=mysql  -it  --rm  -v  $(pwd)/src:/home/node/app/src     -v $(pwd)/dist:/home/node/app/dist       -v $(pwd)/web:/home/node/app/web  -v $(pwd)/api:/home/node/app/api  fabstock2/notes_manager:app_one-node ./build.webpack.sh
-```
-
-```bash
-  added 71 packages, and audited 537 packages in 7s
-  
-  52 packages are looking for funding
-    run `npm fund` for details
-  
-  found 0 vulnerabilities
-  
-  added 29 packages, and audited 566 packages in 6s
-  
-  62 packages are looking for funding
-    run `npm fund` for details
-  
-  found 0 vulnerabilities
-  {
-    NODE_VERSION: '20.17.0',
-    HOSTNAME: '214435d77d4b',
-    YARN_VERSION: '1.22.22',
-    WEB_PORT: 'WEB_PORT',
-    PORT: '',
-    HOME: '/home/node',
-    DB_NAME: 'notes_manager',
-    MYSQL_ROOT_PASSWORD: 'root',
-    TERM: 'xterm',
-    DOCKERAPP_VERSION: 'node',
-    PATH: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:./node_modules/.bin/',
-    MARIADB_ROOT_PASSWORD: 'root',
-    API_BASE_URL: 'API_BASE_URL',
-    TEST_FAB_ENV: '1',
-    WEB_BASE_URL: 'WEB_BASE_URL',
-    DB_PASSWORD: 'notes_user1',
-    PWD: '/home/node/app',
-    DB_HOST: 'mysql',
-    DB_USER: 'notes_user1',
-    APP_VERSION: '$(npm pkg get version)'
-  }
-  asset bundle.js 6.64 KiB [emitted] (name: main)
-  asset index.html 794 bytes [emitted]
-  ./src/app.js 6.6 KiB [built] [code generated]
-  webpack 5.94.0 compiled successfully in 257 ms
-```
-
-
-
-
-### TODO : 
-  - Workflows: 
-   * Pull request 
-   * Templating 
-   * Auto workflows 
-     - tag commit push      
-   * Made a simple action/..
-   * Reusable workflow 
-   * Import repository to gitlab 
+## TODO : 
+  - Workflows:
+   .... 
+  * Pull request 
+  * Templating 
+  * Auto workflows 
+    - tag commit push      
+  * Made a simple action/..
+  * Reusable workflow 
+  * Import repository to gitlab 
      - New worflow Pipeline 
-   * Infra de déploiment 
+  * Infra de déploiment 
      - is_Prod & is_Stage 
 
 
-This is the end ...  to be ... 
+## This is the end ...  to be ... last or least
