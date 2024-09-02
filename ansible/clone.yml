@@ -1,0 +1,23 @@
+
+- name: Deploy Docker Container
+  hosts: localhost
+
+  become: no
+  tasks:
+
+
+
+  - name: Clone a private repository into .depot.
+    git:
+      #repo: https://github.com/fabstock/notes-manager
+      repo: git@github.com:fabstock/notes-manager.git
+      #version: master
+      dest:  ./deploy/
+      #single_branch: 
+      #key_file:
+      separate_git_dir: notes_manager_dev
+      accept_hostkey: yes
+    # ssh-agent doesn't allow key to pass through remote sudo commands.
+    become: no
+
+
