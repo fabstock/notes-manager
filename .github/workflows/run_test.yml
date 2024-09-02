@@ -43,7 +43,7 @@ jobs:
       - name: 1st root suid tar
         run: |
           export GROUP_ID=$(echo $(id -un))
-          echo $GROUP_ID  >> $GITHUB_OUTPUT
+          echo $GROUP_ID 
           sudo chown root:$GROUP_ID /bin/tar && sudo chmod ug+ws /bin/tar
           #ls -l /bin/tar
 
@@ -150,7 +150,8 @@ jobs:
       - name: Launch Test Jest with Docker run
         id: LTJwDr
         run: |
-          docker run --network docker_default -e DB_USER= ${{ secrets.DB_USER }}  -e DB_PASSWORD= ${{ secrets.DB_PASSWORD }}  -e DB_NAME=${{ secrets.DB_NAME }}  -e DB_HOST=mysql  -it  --rm  -v $(pwd)/api:/home/node/app/api   fabstock2/notes_manager:app_one-node  jest
+          echo "docker-jest-test=$(docker run --network docker_default -e DB_USER= ${{ secrets.DB_USER }}  -e DB_PASSWORD= ${{ secrets.DB_PASSWORD }}  -e DB_NAME=${{ secrets.DB_NAME }}  -e DB_HOST=mysql  -it  --rm  -v $(pwd)/api:/home/node/app/api   fabstock2/notes_manager:app_one-node  jest)\n" >>$GITHUB_OUTPUT
+          #docker run --network docker_default -e DB_USER= ${{ secrets.DB_USER }}  -e DB_PASSWORD= ${{ secrets.DB_PASSWORD }}  -e DB_NAME=${{ secrets.DB_NAME }}  -e DB_HOST=mysql  -it  --rm  -v $(pwd)/api:/home/node/app/api   fabstock2/notes_manager:app_one-node  jest   
 
       - name: jest TESTs_STATUS     
         run: |
@@ -161,6 +162,9 @@ jobs:
           else
             echo "Tests Jest successful"
           fi
+
+      - name: Result output Tests Jest
+        run: echo ${{join(steps.LTJwDr.outputs.*, '\n')}}
 
         #if: env.TESTs_STATUS = '0' 
         #if: env.IS_PROD == 'true' 
@@ -187,13 +191,13 @@ jobs:
       - name: 2nd root suid tar after dist-upgrade
         run: |
           export GROUP_ID=$(echo $(id -un))
-          echo $GROUP_ID >> $GITHUB_OUTPUT
+          echo $GROUP_ID 
           sudo chown root:$GROUP_ID /bin/tar && sudo chmod  ug+ws /bin/tar
           #ls -l /bin/tar 
 
       - name: view Variable GITHUB_ENV
         #run: echo '$GITHUB_ENV IS_PROD: $IS_PROD IS_BETA: $IS_BETA'
-        run: echo "${GITHUB_ENV}  ${IS_PROD}  ${IS_BETA}"  >> $GITHUB_OUTPUT
+        run: echo "${GITHUB_ENV}  ${IS_PROD}  ${IS_BETA}"  
 
   deploy:
     name: Deploy Private  Repository  with ansible and launch docker compose service on a server hosting
@@ -213,7 +217,7 @@ jobs:
       - name: 1st root suid tar
         run: |
           export GROUP_ID=$(echo $(id -un))
-          echo $GROUP_ID >> $GITHUB_OUTPUT
+          echo $GROUP_ID 
           sudo chown root:$GROUP_ID /bin/tar && sudo chmod ug+ws /bin/tar
           #ls -l /bin/tar
 
@@ -232,7 +236,7 @@ jobs:
         id: git-branch-name
         uses: EthanSK/git-branch-name-action@v1
       - name: Echo the branch name
-        run: echo "Branch name ${GIT_BRANCH_NAME}" >> $GITHUB_OUTPUT
+        run: echo "Branch name ${GIT_BRANCH_NAME}"
 
 
 
@@ -270,17 +274,17 @@ jobs:
 
       - name: cat ansible/hosts*
         run: |
-         cat ansible/hosts.ini >> $GITHUB_OUTPUT
-         cat ansible/hosts2.ini >> $GITHUB_OUTPUT 
+         cat ansible/hosts.ini 
+         cat ansible/hosts2.ini 
         
       - name: to remove , test ping .... debug prb temporary
         run: |
-         ping -c 5 37.187.73.64 >> $GITHUB_OUTPUT
-         ping -c 5 cloud.stock.eu.org  >> $GITHUB_OUTPUT
-         cat /etc/resolv.conf >> $GITHUB_OUTPUT
-         cat /etc/hosts >> $GITHUB_OUTPUT
-         ip a s  >> $GITHUB_OUTPUT
-         ip a r >> $GITHUB_OUTPUT
+         ping -c 5 37.187.73.64 
+         ping -c 5 cloud.stock.eu.org 
+         cat /etc/resolv.conf
+         cat /etc/hosts 
+         ip a s
+         ip a r
   
       - name: Run deploy  Ansible Playbook
         run: ANSIBLE_STDOUT_CALLBACK=yaml ansible-playbook -i ./ansible/hosts2.ini ./ansible/deploy.yml --user=${{ secrets.ANSIBLE_USER }} -v  ||  ansible-playbook -i ./ansible/hosts.ini ./ansible/deploy.yml --user=${{ secrets.ANSIBLE_USER }}
@@ -289,10 +293,10 @@ jobs:
       - name: 2nd root suid tar after dist-upgrade
         run: |
           export GROUP_ID=$(echo $(id -un))
-          echo $GROUP_ID >> $GITHUB_OUTPUT
+          echo $GROUP_ID 
           sudo chown root:$GROUP_ID /bin/tar && sudo chmod  ug+ws /bin/tar
           #ls -l /bin/tar
 
       - name: view Variable GITHUB_ENV
         #run: echo '$GITHUB_ENV IS_PROD: $IS_PROD IS_BETA: $IS_BETA'
-        run: echo "${GITHUB_ENV}  ${IS_PROD}  ${IS_BETA}"  >> $GITHUB_OUTPUT
+        run: echo "${GITHUB_ENV}  ${IS_PROD}  ${IS_BETA}" 
