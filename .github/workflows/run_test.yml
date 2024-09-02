@@ -100,10 +100,10 @@ jobs:
 
       - name: Push Docker image to Docker Hub
         run: |
-          docker push fabstock2/app_test-node
-          docker push fabstock2/app_webpack-node
-          docker push fabstock2/app_api-node
-          docker push fabstock2/app_web-node
+          docker push fabstock2/notes_manager:app_test-node
+          docker push fabstock2/notes_manager:app_webpack-node
+          docker push fabstock2/notes_manager:app_api-node
+          docker push fabstock2/notes_manager:app_web-node
 
 
 
