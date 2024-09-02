@@ -6,7 +6,6 @@ RUN apt-get clean
 
 
 USER node
-
 RUN  mkdir -p /home/node/app
 
 #WORKDIR /home/notes
@@ -22,7 +21,10 @@ ENV PATH=$PATH:./node_modules/.bin/
 #RUN npm ci --omit dev
 RUN npm ci 
 
-
+#FROM gcr.io/distroless/nodejs
+#USER node
+#RUN  mkdir -p /home/node/app
+#COPY --from=build /home/node/app .
 
 #VOLUME /home/notes/api 
 #VOLUME /home/notes/web 
@@ -46,7 +48,7 @@ ENV DB_HOST ${DB_HOST:-DB_HOST}
 ENV WEB_BASE_URL ${WEB_BASE_URL:-WEB_BASE_URL}
 ENV API_BASE_URL ${API_BASE_URL:-API_BASE_URL}
 ENV WEB_PORT ${WEB_PORT:-WEB_PORT}
-ENV PORT ${PORT:-$PORT}
+ENV PORT ${PORT:-PORT}
 
 ENV DOCKERAPP_VERSION node
 #ENV DOCKERAPP_VERSION=${DOCKERAPP_VERSION}

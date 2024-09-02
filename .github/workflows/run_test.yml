@@ -172,7 +172,7 @@ jobs:
         if: steps.Udcu.outputs.exit_code == 0
         id: LTJwDr
         run: |
-          echo "$(docker-jest-test=$(docker run --network docker_default -e DB_USER= ${{ secrets.DB_USER }}  -e DB_PASSWORD= ${{ secrets.DB_PASSWORD }}  -e DB_NAME=${{ secrets.DB_NAME }}  -e DB_HOST=mysql  -it  --rm  -v $(pwd)/api:/home/node/app/api   fabstock2/notes_manager:app_one-node  jest)\n" >>$GITHUB_OUTPUT
+          echo "(docker-jest-test=$(docker run --network docker_default -e DB_USER= ${{ secrets.DB_USER }}  -e DB_PASSWORD= ${{ secrets.DB_PASSWORD }}  -e DB_NAME=${{ secrets.DB_NAME }}  -e DB_HOST=mysql  -it  --rm  -v $(pwd)/api:/home/node/app/api   fabstock2/notes_manager:app_one-node  jest))\n" >>$GITHUB_OUTPUT
           #docker run --network docker_default -e DB_USER= ${{ secrets.DB_USER }}  -e DB_PASSWORD= ${{ secrets.DB_PASSWORD }}  -e DB_NAME=${{ secrets.DB_NAME }}  -e DB_HOST=mysql  -it  --rm  -v $(pwd)/api:/home/node/app/api   fabstock2/notes_manager:app_one-node  jest   
       
       - name: jest TESTs_STATUS     
