@@ -1,5 +1,5 @@
 name: |
-   Build (image docker) , Test (npm jest), 
+   Build one (image docker) , Test (npm jest), 
    Push and Deploy with Docker Compose Containers on ...           
    This is a poor man pipeline  ,                               
    and  Not Optimize & not Secure pipeline for learning           
