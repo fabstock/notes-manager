@@ -55,7 +55,7 @@ jobs:
         uses: actions/checkout@v4
  
       - name:  whoami
-        run:   whoami && id 
+        run:   pwd && whoami && id  && ls -altr
 
       - name:  sudo mkdir -p /home/node/app/Docker 
         run:   sudo mkdir -p /home/node/app/Docker
@@ -68,8 +68,9 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           load: true
-          context: ..
-          file: /home/node/app/Docker/Dockerfile.node
+          context: .
+          #file: /home/node/app/Docker/Dockerfile.node
+          file: ./Docker/Dockerfile.node
           cache-from: type=gha,scope=$GITHUB_REF_NAME-Docker-dev
           cache-to: type=gha,scope=$GITHUB_REF_NAME-Docker-dev,mode=max
 
