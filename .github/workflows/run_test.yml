@@ -56,7 +56,7 @@ jobs:
 
 
       - name:  sudo mkdir -p /home/node/app  
-        run: mkdir -p /home/node/
+        run:   sudo mkdir -p /home/node/app
 
       - name: Set up Docker
         uses: docker/setup-buildx-action@v2
