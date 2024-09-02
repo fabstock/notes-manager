@@ -101,8 +101,8 @@ jobs:
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
       - name: Push Docker image to Docker Hub
-         run: |
-           docker push fabstock2/notes_manager:app_one-node
+        run: |
+          docker push fabstock2/notes_manager:app_one-node
 
 #          docker push fabstock2/notes_manager:app_test-node
 #          docker push fabstock2/notes_manager:app_webpack-node
