@@ -172,12 +172,12 @@ jobs:
         if: steps.Udcu.outputs.exit_code == 0
         id: LTJwDr
         run: |
-          echo "docker-jest-test=$(docker run --network docker_default -e DB_USER= ${{ secrets.DB_USER }}  -e DB_PASSWORD= ${{ secrets.DB_PASSWORD }}  -e DB_NAME=${{ secrets.DB_NAME }}  -e DB_HOST=mysql  -it  --rm  -v $(pwd)/api:/home/node/app/api   fabstock2/notes_manager:app_one-node  jest)\n" >>$GITHUB_OUTPUT
+          echo "$(docker-jest-test=$(docker run --network docker_default -e DB_USER= ${{ secrets.DB_USER }}  -e DB_PASSWORD= ${{ secrets.DB_PASSWORD }}  -e DB_NAME=${{ secrets.DB_NAME }}  -e DB_HOST=mysql  -it  --rm  -v $(pwd)/api:/home/node/app/api   fabstock2/notes_manager:app_one-node  jest)\n" >>$GITHUB_OUTPUT
           #docker run --network docker_default -e DB_USER= ${{ secrets.DB_USER }}  -e DB_PASSWORD= ${{ secrets.DB_PASSWORD }}  -e DB_NAME=${{ secrets.DB_NAME }}  -e DB_HOST=mysql  -it  --rm  -v $(pwd)/api:/home/node/app/api   fabstock2/notes_manager:app_one-node  jest   
       
       - name: jest TESTs_STATUS     
         run: |
-          TESTs_STATUS=$?
+          export TESTs_STATUS=$?
           if [ $TESTs_STATUS -ne 0 ]; then
             echo "Tests Jest  failed with exit code $TESTs_STATUS"
              # Take action if build failed (e.g., send notification, roll back changes)
@@ -186,7 +186,7 @@ jobs:
           fi
 
       - name: Result output Tests Jest
-        run: echo ${{join(steps.LTJwDr.outputs.*, '\n')}}
+        run: echo "${{join(steps.LTJwDr.outputs.*, '\n')}}"
         #if: env.TESTs_STATUS = '0' 
         #if: env.IS_PROD == 'true' 
         
@@ -286,7 +286,7 @@ jobs:
           #ssh-add ~/.ssh/id_ed25519  # Ajoute la clé privée à l'agent SSH
           cat ~/.ssh/id_ed25519 | tr -d '\r' | DISPLAY=None SSH_ASKPASS=~/.ssh/passphrase ssh-add -
           #ssh-keyscan -H  ~/.ssh/id_ed25519 ${{ secrets.ANSIBLE_HOST }}  >> ~/.ssh/known_hosts
-          DISPLAY=None SSH_ASKPASS=~/.ssh/passphrase   -H  ~/.ssh/id_ed25519 ${{ secrets.ANSIBLE_HOST }}  >> ~/.ssh/known_hosts  
+          DISPLAY=None SSH_ASKPASS=~/.ssh/passphrase  ssh-keyscan  -H  ~/.ssh/id_ed25519 ${{ secrets.ANSIBLE_HOST }}  >> ~/.ssh/known_hosts  
 
 
 

@@ -29,6 +29,7 @@
  - others:
    (à etudier - uses: getong/mariadb-action@v1.11 )
   -  https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners#creating-and-using-secrets-encrypted-variables   
+  - https://github.com/appleboy/ssh-action
 
 
  ### Jest npm test
