@@ -1,6 +1,36 @@
 
-# -  efface la db existante
-# -  test ecriture dans la db
+
+
+# ##  this is a poor man pipeline  ,
+# ###  a Not Optimize & not Secure pipeline for learning
+
+
+# ### The most Famous Action Github 
+
+# ### actions/checkout@v4
+# - https://github.com/actions/checkout
+
+# ### The good friend 
+#  - https://github.com/nektos/acthttps://github.com/nektos/act
+
+# ### And the Bastards 
+
+# - https://github.com/actions/cache
+# - https://github.com/marketplace/actions/start-mariadb
+
+
+# - https://github.com/EthanSK/git-branch-name-action
+#   https://github.com/marketplace/actions/git-branch-name
+
+# - others:
+#   (à etudier - uses: getong/mariadb-action@v1.11 )
+#  -  https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners#creating-and-using-secrets-encrypted-variables   
+
+
+# ### Jest npm test
+
+# -  efface la db éxistante
+# -  test écriture dans la db 2 
 
 # ```
 
@@ -8,7 +38,34 @@ docker run --network docker_default -e DB_USER=notes_user1  -e DB_PASSWORD=notes
 
 # ```
 
-# webpack just one 
+
+
+
+#```
+ PASS  api/__tests__/notes.test.js
+  Notes Manager
+    ✓ should add a note (75 ms)
+    ✓ should get a note by id (17 ms)
+    ✓ should update a note (15 ms)
+    ✓ should delete a note (19 ms)
+    ✓ should get all notes (13 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       5 passed, 5 total
+Snapshots:   0 total
+Time:        0.817 s
+Ran all test suites.
+
+
+
+#```
+
+
+
+
+
+
+# ### webpack just one 
 
 # - modifie le code de api/src/app.js  pour pouvoir acceder a api sans probleme cors 
 #   sur le nom de la  variable: env  WEB_BASE_URL 
@@ -24,7 +81,7 @@ docker run --network docker_default -e DB_USER=notes_user1  -e DB_PASSWORD=notes
 #    ( docroot web/public/ )
 
 
-#	- localhost [/tmp/tm/notes-manager]$ git diff main..dev -- web/server.js
+# - localhost [/tmp/tm/notes-manager]$ git diff main..dev -- web/server.js
 #```
 #	diff --git a/web/server.js b/web/server.js
 #	index f2e54cb..07f7611 100644
@@ -80,8 +137,8 @@ docker run --network docker_default -e DB_USER=notes_user1  -e DB_PASSWORD=notes
 
 
 # -	localhost [/tmp/tm/notes-manager]$ git diff main..dev -- api/app.js
-#```
 
+#```
 #	diff --git a/api/app.js b/api/app.js
 #	index f62bf66..f1ad0a1 100644
 #	--- a/api/app.js
@@ -182,25 +239,7 @@ localhost [/tmp/tm/notes-manager]$ dce restart app_api  app_web
 
 # ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # ```
-
 git checkout main web/public/app.js web/public/index.html
 cp web/public/index.html src/index.html.template
 cp web/public/app.js src/app.js
@@ -249,14 +288,16 @@ asset index.html 794 bytes [emitted]
 webpack 5.94.0 compiled successfully in 328 ms
 
 
+# ```
 
 
 
+# ```
 docker run --network docker_default -e DB_USER=notes_user1  -e DB_PASSWORD=notes_user1 -e DB_NAME=notes_manager   -e DB_HOST=mysql  -it  --rm  -v  $(pwd)/src:/home/node/app/src     -v $(pwd)/dist:/home/node/app/dist       -v $(pwd)/web:/home/node/app/web  -v $(pwd)/api:/home/node/app/api  fabstock2/notes_manager:app_one-node ./build.webpack.sh
 
 # ```
 
-#  # ```
+# ```
 #  added 71 packages, and audited 537 packages in 7s
 #  
 #  52 packages are looking for funding
@@ -297,8 +338,4 @@ docker run --network docker_default -e DB_USER=notes_user1  -e DB_PASSWORD=notes
 #  ./src/app.js 6.6 KiB [built] [code generated]
 #  webpack 5.94.0 compiled successfully in 257 ms
 #  
-#  # ```
-#  
-
-
-
+# ```

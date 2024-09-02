@@ -1,7 +1,9 @@
 name: |
-   Build (image docker) , Test (npm jest), Push and Deploy with Docker Compose Containers on ...\n
-   this is a poor man pipeline  ,\n
-   and a Not Optimize & not Secure pipeline for learning\n
+   Build (image docker) , Test (npm jest), 
+   Push and Deploy with Docker Compose Containers on ...           
+   This is a poor man pipeline  ,                               
+   and  Not Optimize & not Secure pipeline for learning           
+
 
 
 on:
@@ -32,6 +34,7 @@ jobs:
         id: get-date
         run: |
           echo "date=$(/bin/date -u "+%Y%m%d")" >> $GITHUB_OUTPUT
+          echo  $GITHUB_OUTPUT
         shell: bash
 
       - name: Set ENV IS_PROD or IS_STAGE 
@@ -78,17 +81,33 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       
-      - name:  Whoami
-        run:   pwd && whoami && id  && ls -altr
+      #- name:  Whoami
+      #  run:   pwd && whoami && id  && ls -altr
 
-      - name:  sudo mkdir -p /home/node/app/Docker
-        run:   sudo mkdir -p /home/node/app/Docker
+      #- name:  sudo mkdir -p /home/node/app/Docker
+      #  run:   sudo mkdir -p /home/node/app/Docker
+
+
 
       - name: Set up Docker
-        uses: docker/setup-buildx-action@v2
+        id: SuD
+        if: steps.Udcu.outputs.exit_code == 0
+        uses: docker/setup-buildx-action@v3
+
+
+      - name: Login to Docker Hub
+        id: LtDh
+        if: steps.SuD.outputs.exit_code == 0
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+ 
+
 
       - name: Build the backend image with cache
         id: Btbiwc
+        if: steps.LtDh.outputs.exit_code == 0
         uses: docker/build-push-action@v4
         with:
           load: true
@@ -112,7 +131,7 @@ jobs:
       - name: Build docker compose build
         id: Bdcb 
         #if: steps.Build the backend image with cache.outputs.Build_STATUS == 0
-        if: steps.Btbiwc.outputs.exit_code == 0
+        if: steps.LtDh.outputs.exit_code == 0
         #if: steps.Btbiwc.outcome == 'success'
      
         run: |
@@ -136,6 +155,7 @@ jobs:
 
 
       - name: Up docker compose up -d infra 3 services nodejs api & web & mariadb 
+        id: Udcu
         #if: steps.Build docker compose build.outputs.Build_STATUS == 0
         if: steps.Bdcb.outputs.exit_code == 0
         run: |   
@@ -149,11 +169,12 @@ jobs:
 
  
       - name: Launch Test Jest with Docker run
+        if: steps.Udcu.outputs.exit_code == 0
         id: LTJwDr
         run: |
           echo "docker-jest-test=$(docker run --network docker_default -e DB_USER= ${{ secrets.DB_USER }}  -e DB_PASSWORD= ${{ secrets.DB_PASSWORD }}  -e DB_NAME=${{ secrets.DB_NAME }}  -e DB_HOST=mysql  -it  --rm  -v $(pwd)/api:/home/node/app/api   fabstock2/notes_manager:app_one-node  jest)\n" >>$GITHUB_OUTPUT
           #docker run --network docker_default -e DB_USER= ${{ secrets.DB_USER }}  -e DB_PASSWORD= ${{ secrets.DB_PASSWORD }}  -e DB_NAME=${{ secrets.DB_NAME }}  -e DB_HOST=mysql  -it  --rm  -v $(pwd)/api:/home/node/app/api   fabstock2/notes_manager:app_one-node  jest   
-
+      
       - name: jest TESTs_STATUS     
         run: |
           TESTs_STATUS=$?
@@ -166,19 +187,12 @@ jobs:
 
       - name: Result output Tests Jest
         run: echo ${{join(steps.LTJwDr.outputs.*, '\n')}}
-
         #if: env.TESTs_STATUS = '0' 
         #if: env.IS_PROD == 'true' 
         
-      - name: Login to Docker Hub
-        if: steps.LTJwDr.outputs.exit_code == 0
-        #if: steps.Launch Test Jest with Docker run.outputs TESTs_STATUS == 0
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
       - name: Push Docker image to Docker Hub
+        if: steps.LTJwDr.outputs.exit_code == 0
         #if: steps.Launch Test Jest with Docker run.outputs TESTs_STATUS == 0
         run: |
           docker push fabstock2/notes_manager:app_one-node
@@ -259,9 +273,22 @@ jobs:
           mkdir -p ~/.ssh  
           /bin/echo "${{ secrets.ANSIBLE_SSH_KEY }}" > ~/.ssh/id_ecdsa  # Crée un fichier pour la clé privée
           chmod 600 ~/.ssh/id_ecdsa  # Définit les permissions correctes pour la clé
+          /bin/echo "${{ secrets.ANSIBLE_SSH_KEY2 }}" > ~/.ssh/id_ed25519  # Crée un fichier pour la clé privée
+          chmod 600 ~/.ssh/id_ed25519  # Définit les permissions correctes pour la clé
+      
+      - name:
+        run: |
+          echo 'echo ${{secrets.SSH_PASS_PHRASE}}' > ~/.ssh/passphrase && chmod 700 ~/.ssh/passphrase
           eval "$(ssh-agent -s)"  # Démarre ssh-agent
           ssh-add ~/.ssh/id_ecdsa  # Ajoute la clé privée à l'agent SSH
           ssh-keyscan -H  ~/.ssh/id_ecdsa ${{ secrets.ANSIBLE_HOST }}  >> ~/.ssh/known_hosts
+          #with passphrase
+          #ssh-add ~/.ssh/id_ed25519  # Ajoute la clé privée à l'agent SSH
+          cat ~/.ssh/id_ed25519 | tr -d '\r' | DISPLAY=None SSH_ASKPASS=~/.ssh/passphrase ssh-add -
+          #ssh-keyscan -H  ~/.ssh/id_ed25519 ${{ secrets.ANSIBLE_HOST }}  >> ~/.ssh/known_hosts
+          DISPLAY=None SSH_ASKPASS=~/.ssh/passphrase   -H  ~/.ssh/id_ed25519 ${{ secrets.ANSIBLE_HOST }}  >> ~/.ssh/known_hosts  
+
+
 
       - name: Prepare Inventory 
         run: |
@@ -280,12 +307,14 @@ jobs:
         
       - name: to remove , test ping .... debug prb temporary
         run: |
-         ping -c 5 37.187.73.64 || echo 0  
-         ping -c 5 cloud.stock.eu.org || echo 0 
+         sudo ping -c 3 37.187.73.64 || echo 0  
+         sudo ping -c 3 cloud.stock.eu.org || echo 0 
          cat /etc/resolv.conf || echo 0 
          cat /etc/hosts  || echo 0
          ip a s || echo 0
          ip a r || echo 0
+         nslookup google.com || echo 0
+
   
       - name: Run deploy  Ansible Playbook
         run: ANSIBLE_STDOUT_CALLBACK=yaml ansible-playbook -i ./ansible/hosts2.ini ./ansible/deploy.yml --user=${{ secrets.ANSIBLE_USER }} -v  ||  ansible-playbook -i ./ansible/hosts.ini ./ansible/deploy.yml --user=${{ secrets.ANSIBLE_USER }}
