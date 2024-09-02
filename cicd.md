@@ -26,12 +26,28 @@
  - https://github.com/EthanSK/git-branch-name-action
    https://github.com/marketplace/actions/git-branch-name
 
- - others:
+ ### others:
    (à etudier - uses: getong/mariadb-action@v1.11 )
   -  https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners#creating-and-using-secrets-encrypted-variables   
   - https://github.com/appleboy/ssh-action
+  
+  - https://www.baeldung.com/linux/docker-compose-check-container-running
+    
+  - docker inspect --format "{{.State.Status}}" app_api
+```
+    running
+```
+  - docker inspect --format "{{.NetworkSettings.Networks.docker_default.IPAddress}}" app_api
+```
+172.20.0.3
+```
 
-
+  - docker inspect app_api  |  jq ".[].NetworkSettings.Networks.docker_default.IPAddress"
+    (avec quotes ")
+```
+"172.20.0.3"
+```
+   
  ### Jest npm test
 
  -  efface la db éxistante
@@ -39,7 +55,7 @@
 
  ```
 
-docker run --network docker_default -e DB_USER=notes_user1  -e DB_PASSWORD=notes_user1 -e DB_NAME=notes_manager   -e DB_HOST=mysql  -it  --rm  -v $(pwd)/api:/home/node/app/api   fabstock2/notes_manager:app_one-node  jest
+docker run --network docker_default -it -e DB_USER=notes_user1  -e DB_PASSWORD=notes_user1 -e DB_NAME=notes_manager   -e DB_HOST=mysql  -it  --rm  -v $(pwd)/api:/home/node/app/api   fabstock2/notes_manager:app_one-node  jest
 
  ```
 

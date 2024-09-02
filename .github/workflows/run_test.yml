@@ -176,11 +176,12 @@ jobs:
           docker  compose  --file=Docker/docker-compose-one-image.yml  up  -d    --remove-orphans
           #docker --debug compose  --file=Docker/docker-compose-mysql.yml  up  -d    --remove-orphans 
           docker network ls
-          sleep 30
+          echo sleep 20
+          sleep 20
           docker images 
           docker ps -a
-          docker compose  --file=Docker/docker-compose-one-image.yml  up  logs   
-
+          docker compose  --file=Docker/docker-compose-one-image.yml  logs   
+           echo "(docker-ip-app_api=$(docker inspect app_api   |  jq '.[].NetworkSettings.IPAddress'))\n" >>$GITHUB_OUTPUT
 
 
       - name: Login to Docker Hub
