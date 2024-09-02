@@ -5,8 +5,9 @@ on:
   push:
     branches:
       - dev  # Ajustez en fonction de votre branche de déploiement
-
-
+  pull_request:
+    branches: "main"
+   
 permissions:
   contents: write  # Donne les permissions pour écrire les contenus du dépôt
 
@@ -77,7 +78,8 @@ jobs:
 
       - name: build docker compose 
         run: |
-          docker compose    --file=./Docker/docker-compose-test.yml --file=Docker/docker-compose-mysql.yml --file=./Docker/docker-compose-app_webpack.yml  --file=./Docker/docker-compose-app_api.yml  --file=./Docker/docker-compose-app_web.yml  build --no-cache
+          #docker compose    --file=./Docker/docker-compose-test.yml --file=Docker/docker-compose-mysql.yml --file=./Docker/docker-compose-app_webpack.yml  --file=./Docker/docker-compose-app_api.yml  --file=./Docker/docker-compose-app_web.yml  build --no-cache
+          docker compose    --file=./Docker/docker-compose-one-image.yml   build --no-cache
           #/Docker/docker-compose-nginx.yml  
           docker images 
           #env && ls -latr  && pwd 
@@ -85,7 +87,7 @@ jobs:
 
       - name: test jest with docker compose 
         run: |   
-          docker  compose  --file=Docker/docker-compose-mysql.yml      --file=./Docker/docker-compose-test.yml up  -d    --remove-orphans
+          docker  compose  --file=Docker/docker-compose-one-image.yml  up  -d    --remove-orphans
           docker ps -a
           #docker --debug compose  --file=Docker/docker-compose-mysql.yml  up  -d    --remove-orphans 
           #sudo apt-get update
@@ -99,15 +101,15 @@ jobs:
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
       - name: Push Docker image to Docker Hub
-        run: |
-          docker push fabstock2/notes_manager:app_test-node
-          docker push fabstock2/notes_manager:app_webpack-node
-          docker push fabstock2/notes_manager:app_api-node
-          docker push fabstock2/notes_manager:app_web-node
+         run: |
+           docker push fabstock2/notes_manager:app_one-node
+
+#          docker push fabstock2/notes_manager:app_test-node
+#          docker push fabstock2/notes_manager:app_webpack-node
+#          docker push fabstock2/notes_manager:app_api-node
+#          docker push fabstock2/notes_manager:app_web-node
 
 
-
-      
 
 
        # not prod:  testing only cache for keep package download in /var/cahe/apt/archives/
@@ -150,7 +152,6 @@ jobs:
           ansible-galaxy collection install community.docker
 
 
-
       - name: Set up SSH agent and add private key
         run: |
           mkdir -p ~/.ssh  
@@ -176,6 +177,7 @@ jobs:
         run: |
          cat ansible/hosts.ini
          cat ansible/hosts2.ini
-          
+        
+  
       - name: Run Ansible Playbook deploy
-        run: ansible-playbook -i ./ansible/hosts2.ini ./ansible/deploy.yml --user=${{ secrets.ANSIBLE_USER }} -v  ||  ansible-playbook -i ./ansible/hosts.ini ./ansible/deploy.yml --user=${{ secrets.ANSIBLE_USER }}
+        run: ANSIBLE_STDOUT_CALLBACK=yaml ansible-playbook -i ./ansible/hosts2.ini ./ansible/deploy.yml --user=${{ secrets.ANSIBLE_USER }} -v  ||  ansible-playbook -i ./ansible/hosts.ini ./ansible/deploy.yml --user=${{ secrets.ANSIBLE_USER }}

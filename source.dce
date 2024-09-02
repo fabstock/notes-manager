@@ -1,3 +1,8 @@
 
 #alias dce="docker compose --file=./Docker/docker-compose-mysql.yml --file=./Docker/docker-compose-test.yml  --file=./Docker/docker-compose-app_web.yml --file=./Docker/docker-compose-app_api.yml --file=./Docker/docker-compose-app_webpack.yml  --file=./Docker/docker-compose-nginx.yml $1 $2 $3 $4 $5"
-alias dce="docker compose --file=./Docker/docker-compose-mysql.yml --file=./Docker/docker-compose-app_web.yml --file=./Docker/docker-compose-app_api.yml --file=./Docker/docker-compose-nginx.yml $1 $2 $3 $4 $5"
+
+
+#alias dce="docker compose --file=./Docker/docker-compose-mysql.yml --file=./Docker/docker-compose-app_web.yml --file=./Docker/docker-compose-app_api.yml --file=./Docker/docker-compose-nginx.yml $1 $2 $3 $4 $5"
+
+alias dce="docker compose --file=./Docker/docker-compose-one-image.yml --file=./Docker/docker-compose-nginx.yml  $1 $2 $3 $4 $5"
+

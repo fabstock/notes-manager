@@ -2,4 +2,10 @@
   hosts: all
   become: no
   tasks:
-    - name: launch docker compose
+
+  - name: launch docker compose
+    shell: echo $(date)
+
+  - name: launch the docker 
+    shell: docker ps -a
+
