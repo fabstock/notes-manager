@@ -105,7 +105,7 @@ jobs:
 
       - name: Set up Docker
         id: SuD
-        if: steps.Udcu.outputs.exit_code == 0
+        #if: steps.Udcu.outputs.exit_code == 0
         uses: docker/setup-buildx-action@v3
 
 
@@ -117,7 +117,6 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
  
-
 
       - name: Build the backend image with cache
         id: Btbiwc
@@ -150,9 +149,8 @@ jobs:
      
         run: |
           #docker compose    --file=./Docker/docker-compose-test.yml --file=Docker/docker-compose-mysql.yml --file=./Docker/docker-compose-app_webpack.yml  --file=./Docker/docker-compose-app_api.yml  --file=./Docker/docker-compose-app_web.yml  build --no-cache
-          docker compose    --file=./Docker/docker-compose-one-image.yml   build --no-cache
           #/Docker/docker-compose-nginx.yml  
-          docker images 
+          docker compose    --file=./Docker/docker-compose-one-image.yml   build --no-cache
           #env && ls -latr  && pwd 
 
 
@@ -165,6 +163,7 @@ jobs:
           else
             echo "Build successful"
           fi
+          docker images 
 
 
 
@@ -173,34 +172,43 @@ jobs:
         #if: steps.Build docker compose build.outputs.Build_STATUS == 0
         if: steps.Bdcb.outputs.exit_code == 0
         run: |   
-          docker  compose  --file=Docker/docker-compose-one-image.yml  up  -d    --remove-orphans
           #docker --debug compose  --file=Docker/docker-compose-mysql.yml  up  -d    --remove-orphans 
-          docker network ls
-          echo sleep 20
-          sleep 20
-          docker images 
-          docker ps -a
-          docker compose  --file=Docker/docker-compose-one-image.yml  logs   
-          echo "(docker-ip-app_api=$(docker inspect --format '{{.NetworkSettings.Networks.docker_default.IPAddress}}' app_api ))\n" >>$GITHUB_OUTPUT
           #echo "(docker-ip-app_api=$(docker inspect app_api   |  jq '.[].NetworkSettings.IPAddress'))\n" >>$GITHUB_OUTPUT
+          docker  compose  --file=Docker/docker-compose-one-image.yml  up  -d    --remove-orphans
 
 
-      - name: Login to Docker Hub
+      - name: Re Login to Docker Hub
         id: LtDh2
-        if: steps.SuD.outputs.exit_code == 0
+        if: steps.Udcu.outputs.exit_code == 0
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+
+      - name: build mano test !! 
+        id: debug_build
+        run: |
+          docker build --no-cache -t fabstock2/notes_manager:app_test-node  -f Docker/Dockerfile.node . 
  
       - name: Launch Test Jest with Docker run
         if: steps.Udcu.outputs.exit_code == 0
+        #if: steps.LtDh2.outputs.exit_code == 0
         id: LTJwDr
         run: |
-          echo "(docker-jest-test=$(docker run  --network docker_default -e DB_USER=${{ secrets.DB_USER }}  -e DB_PASSWORD=${{ secrets.DB_PASSWORD }}  -e DB_NAME=${{ secrets.DB_NAME }}  -e DB_HOST=mysql  -t  --rm  -v $(pwd)/api:/home/node/app/api   fabstock2/notes_manager:app_one-node  jest))\n" >>$GITHUB_OUTPUT
+          docker compose  --file=Docker/docker-compose-one-image.yml  logs   
+          docker network ls
+          echo "(docker-ip-app_api=$(docker inspect --format '{{.NetworkSettings.Networks.docker_default.IPAddress}}' app_api ))\n" >>$GITHUB_OUTPUT
+          echo sleep 10
+          sleep 10
+          docker images 
+          docker ps -a
+          docker run  --network docker_default -e DB_USER=${{ secrets.DB_USER }}  -e DB_PASSWORD=${{ secrets.DB_PASSWORD }}  -e DB_NAME=${{ secrets.DB_NAME }}  -e DB_HOST=mysql  -t  --rm  -v $(pwd)/api:/home/node/app/api   fabstock2/notes_manager:app_one-node  jest
+          #echo "(docker-jest-test=$(docker run  --network docker_default -e DB_USER=${{ secrets.DB_USER }}  -e DB_PASSWORD=${{ secrets.DB_PASSWORD }}  -e DB_NAME=${{ secrets.DB_NAME }}  -e DB_HOST=mysql  -t  --rm  -v $(pwd)/api:/home/node/app/api   fabstock2/notes_manager:app_one-node  jest))\n" >>$GITHUB_OUTPUT
           #docker run --network docker_default -e DB_USER= ${{ secrets.DB_USER }}  -e DB_PASSWORD= ${{ secrets.DB_PASSWORD }}  -e DB_NAME=${{ secrets.DB_NAME }}  -e DB_HOST=mysql  -it  --rm  -v $(pwd)/api:/home/node/app/api   fabstock2/notes_manager:app_one-node  jest   
       
       - name: jest TESTs_STATUS     
+        #if: steps.LtDh2.outputs.exit_code == 0
         if: steps.LtDh2.outputs.exit_code == 0
         run: |
           export TESTs_STATUS=$?

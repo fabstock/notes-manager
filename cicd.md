@@ -12,7 +12,39 @@
 
  ### The good friend 
   - https://github.com/nektos/acthttps://github.com/nektos/act
+  
+ ```
+  /home/fab/bin/act -s  GITHUB_TOKEN=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  -W  .github/workflows/run_test.yml --defaultbranch dev
 
+INFO[0000] Using docker host 'unix:///var/run/docker.sock', and daemon socket 'unix:///var/run/docker.sock'
+[Build (image docker) , Test (npm jest),
+Push and Deploy with Docker Compose Containers on ...
+This is a poor man pipeline  ,
+and  Not Optimize & not Secure pipeline for learning
+/Build Docker Image & TestS npm jest from docker run  & Push Registry  fabstock2/notes_manager:app_one-node] 🚀  Start image=catthehacker/ubuntu:act-latest
+[Build (image docker) , Test (npm jest),
+Push and Deploy with Docker Compose Containers on ...
+This is a poor man pipeline  ,
+and  Not Optimize & not Secure pipeline for learning
+/Build Docker Image & TestS npm jest from docker run  & Push Registry  fabstock2/notes_manager:app_one-node]   🐳  docker pull image=catthehacker/ubuntu:act-latest platform= username= forcePull=true
+[Build (image docker) , Test (npm jest),
+Push and Deploy with Docker Compose Containers on ...
+This is a poor man pipeline  ,
+and  Not Optimize & not Secure pipeline for learning
+/Build Docker Image & TestS npm jest from docker run  & Push Registry  fabstock2/notes_manager:app_one-node] using DockerAuthConfig authentication for docker pull
+[Build (image docker) , Test (npm jest),
+Push and Deploy with Docker Compose Containers on ...
+This is a poor man pipeline  ,
+and  Not Optimize & not Secure pipeline for learning
+/Build Docker Image & TestS npm jest from docker run  & Push Registry  fabstock2/notes_manager:app_one-node]   🐳  docker create image=catthehacker/ubuntu:act-latest platform= entrypoint=["tail" "-f" "/
+.
+..
+...
+
+```   
+
+
+ 
  ### And the Ugly Bastards 
 
  - https://github.com/actions/cache
@@ -27,6 +59,11 @@
    https://github.com/marketplace/actions/git-branch-name
 
  ### others:
+
+
+  - if  test or and 
+  -  secrets variables 
+
    (à etudier - uses: getong/mariadb-action@v1.11 )
   -  https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners#creating-and-using-secrets-encrypted-variables   
   - https://github.com/appleboy/ssh-action
