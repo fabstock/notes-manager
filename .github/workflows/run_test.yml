@@ -61,7 +61,21 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-apt-archives-
         #${{ runner.os }}-apt-archives-
-         
+      
+      - name: Set up caching for dockerd home
+        uses: actions/cache@v4
+        with:
+          # save-always:v4
+          path: /var/lib/docker
+          #key: ${{ runner.os }}-docker-home-${{ hashFiles('hasfiles.txt') }}
+          key: ${{ runner.os }}-docker-home-
+          restore-keys: |
+            ${{ runner.os }}-docker-home-
+        #${{ runner.os }}-apt-archives-
+
+
+
+   
       - name: Git branch name
         id: git-branch-name
         uses: EthanSK/git-branch-name-action@v1
@@ -167,12 +181,21 @@ jobs:
           #sudo apt-install  -y install
           #env && ls -latr  && pwd 
 
+
+
+      - name: Login to Docker Hub
+        id: LtDh
+        if: steps.SuD.outputs.exit_code == 0
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
  
       - name: Launch Test Jest with Docker run
         if: steps.Udcu.outputs.exit_code == 0
         id: LTJwDr
         run: |
-          echo "(docker-jest-test=$(docker run --network docker_default -e DB_USER= ${{ secrets.DB_USER }}  -e DB_PASSWORD= ${{ secrets.DB_PASSWORD }}  -e DB_NAME=${{ secrets.DB_NAME }}  -e DB_HOST=mysql  -it  --rm  -v $(pwd)/api:/home/node/app/api   fabstock2/notes_manager:app_one-node  jest))\n" >>$GITHUB_OUTPUT
+          echo "(docker-jest-test=$(docker run --network docker_default -e DB_USER=${{ secrets.DB_USER }}  -e DB_PASSWORD=${{ secrets.DB_PASSWORD }}  -e DB_NAME=${{ secrets.DB_NAME }}  -e DB_HOST=mysql  -it  --rm  -v $(pwd)/api:/home/node/app/api   fabstock2/notes_manager:app_one-node  jest))\n" >>$GITHUB_OUTPUT
           #docker run --network docker_default -e DB_USER= ${{ secrets.DB_USER }}  -e DB_PASSWORD= ${{ secrets.DB_PASSWORD }}  -e DB_NAME=${{ secrets.DB_NAME }}  -e DB_HOST=mysql  -it  --rm  -v $(pwd)/api:/home/node/app/api   fabstock2/notes_manager:app_one-node  jest   
       
       - name: jest TESTs_STATUS     
