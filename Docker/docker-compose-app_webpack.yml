@@ -40,6 +40,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-password}
       # DB_PASSWORD:/run/secrets/db_password
       DB_NAME: ${DB_NAME:-default-db}
+      DOCKERAPP_VERSION: ${DOCKERAPP_VERSION:-latest}
     volumes:
       - ../dist:/home/node/app/dist
       - ../src:/home/node/app/src
