@@ -1,21 +1,22 @@
-name: Build, Test, Push, and Deploy Docker Container
+name: |
+   Build (image docker) , Test (npm jest), Push and Deploy with Docker Compose Containers on ...
+   this is a poor man pipeline  ,
+   a Not Optimize & not Secure pipeline for learning
 
 on:
   workflow_dispatch:
   push:
     branches:
-      - dev  # Ajustez en fonction de votre branche de déploiement
+      - dev
   pull_request:
     branches: "main"
    
 permissions:
   contents: write  # Donne les permissions pour écrire les contenus du dépôt
 
-    
-
 jobs:
-  build_and_test:
-    name: npm test jest 
+  build_and_test_push:
+    name: Build Docker Image & TestS npm jest from docker run  & Push Registry  fabstock2/notes_manager:app_one-node
     runs-on: ubuntu-latest
     #environment: "CICD"
     #needs:
@@ -26,14 +27,195 @@ jobs:
 
     steps:
 
+      - name: Get Date
+        id: get-date
+        run: |
+          echo "date=$(/bin/date -u "+%Y%m%d")" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Set ENV IS_PROD or IS_STAGE 
+        run: |
+          echo "IS_PROD=false" >> $GITHUB_ENV
+          echo "IS_STAGE=true" >> $GITHUB_ENV
+       
+ 
+      # not prod:  testing only cache for keep package download in /var/cahe/apt/archives/
+      - name: 1st root suid tar
+        run: |
+          export GROUP_ID=$(echo $(id -un))
+          echo $GROUP_ID  >> $GITHUB_OUTPUT
+          sudo chown root:$GROUP_ID /bin/tar && sudo chmod ug+ws /bin/tar
+          #ls -l /bin/tar
+
+      - name: Set up caching for APT archives
+        uses: actions/cache@v4
+        with:
+          # save-always:v4   
+          path: /var/cache/apt/archives
+          #key: ${{ runner.os }}-apt-archives-${{ hashFiles('apt-packages.txt') }}
+          key: ${{ runner.os }}-apt-archives-
+          restore-keys: |
+            ${{ runner.os }}-apt-archives-
+        #${{ runner.os }}-apt-archives-
+         
+      - name: Git branch name
+        id: git-branch-name
+        uses: EthanSK/git-branch-name-action@v1
+      - name: Echo the branch name
+        #if: ${{ env.GIT_BRANCH_NAME == 'superbranch' }}
+        run: echo "Branch name ${GIT_BRANCH_NAME}"
+
+      - name: Extract branch name
+        shell: bash
+        id: extract_branch
+        run: |
+            echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+            #after that, I can use it in the next steps with steps.<step_id>.outputs.branch:
+            echo ${{ steps.extract_branch.outputs.branch }}
+
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name:  Whoami
+        run:   pwd && whoami && id  && ls -altr
+
+      - name:  sudo mkdir -p /home/node/app/Docker
+        run:   sudo mkdir -p /home/node/app/Docker
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build the backend image with cache
+        id: Btbiwc
+        uses: docker/build-push-action@v4
+        with:
+          load: true
+          context: .
+          #file: /home/node/app/Docker/Dockerfile.node
+          file: ./Docker/Dockerfile.node
+          cache-from: type=gha,scope=$GITHUB_REF_NAME-Docker-dev
+          cache-to: type=gha,scope=$GITHUB_REF_NAME-Docker-dev,mode=max
+    
+      - name: Docker Build STATUS
+        run: |
+          Build_STATUS=$?
+          if [ $Build_STATUS -ne 0 ]; then
+            echo "Build failed with exit code $Build_STATUS"
+             # Take action if build failed (e.g., send notification, roll back changes)
+          else
+            echo "Build successful"
+          fi
+   
+
+      - name: Build docker compose build
+        id: Bdcb 
+        #if: steps.Build the backend image with cache.outputs.Build_STATUS == 0
+        if: steps.Btbiwc.outputs.exit_code == 0
+        #if: steps.Btbiwc.outcome == 'success'
+     
+        run: |
+          #docker compose    --file=./Docker/docker-compose-test.yml --file=Docker/docker-compose-mysql.yml --file=./Docker/docker-compose-app_webpack.yml  --file=./Docker/docker-compose-app_api.yml  --file=./Docker/docker-compose-app_web.yml  build --no-cache
+          docker compose    --file=./Docker/docker-compose-one-image.yml   build --no-cache
+          #/Docker/docker-compose-nginx.yml  
+          docker images 
+          #env && ls -latr  && pwd 
+
+
+      - name: Docker Build_Compose STATUS
+        run: |
+          Build_STATUS=$?
+          if [ $Build_STATUS -ne 0 ]; then
+            echo "Build failed with exit code $Build_STATUS"
+             # Take action if build failed (e.g., send notification, roll back changes)
+          else
+            echo "Build successful"
+          fi
+
+
+
+      - name: Up docker compose up -d infra 3 services nodejs api & web & mariadb 
+        #if: steps.Build docker compose build.outputs.Build_STATUS == 0
+        if: steps.Bdcb.outputs.exit_code == 0
+        run: |   
+          docker  compose  --file=Docker/docker-compose-one-image.yml  up  -d    --remove-orphans
+          docker ps -a
+          docker network ls 
+          #docker --debug compose  --file=Docker/docker-compose-mysql.yml  up  -d    --remove-orphans 
+          #sudo apt-get update
+          #sudo apt-install  -y install
+          #env && ls -latr  && pwd 
+
+ 
+      - name: Launch Test Jest with Docker run
+        id: LTJwDr
+        run: |
+          docker run --network docker_default -e DB_USER= ${{ secrets.DB_USER }}  -e DB_PASSWORD= ${{ secrets.DB_PASSWORD }}  -e DB_NAME=${{ secrets.DB_NAME }}  -e DB_HOST=mysql  -it  --rm  -v $(pwd)/api:/home/node/app/api   fabstock2/notes_manager:app_one-node  jest
+
+      - name: jest TESTs_STATUS     
+        run: |
+          TESTs_STATUS=$?
+          if [ $TESTs_STATUS -ne 0 ]; then
+            echo "Tests Jest  failed with exit code $TESTs_STATUS"
+             # Take action if build failed (e.g., send notification, roll back changes)
+          else
+            echo "Tests Jest successful"
+          fi
+
+        #if: env.TESTs_STATUS = '0' 
+        #if: env.IS_PROD == 'true' 
+        
+      - name: Login to Docker Hub
+        if: steps.LTJwDr.outputs.exit_code == 0
+        #if: steps.Launch Test Jest with Docker run.outputs TESTs_STATUS == 0
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Push Docker image to Docker Hub
+        #if: steps.Launch Test Jest with Docker run.outputs TESTs_STATUS == 0
+        run: |
+          docker push fabstock2/notes_manager:app_one-node
+
+#          docker push fabstock2/notes_manager:app_test-node
+#          docker push fabstock2/notes_manager:app_webpack-node
+#          docker push fabstock2/notes_manager:app_api-node
+#          docker push fabstock2/notes_manager:app_web-node
+
+       # not prod:  testing only cache for keep package download in /var/cahe/apt/archives/
+      - name: 2nd root suid tar after dist-upgrade
+        run: |
+          export GROUP_ID=$(echo $(id -un))
+          echo $GROUP_ID >> $GITHUB_OUTPUT
+          sudo chown root:$GROUP_ID /bin/tar && sudo chmod  ug+ws /bin/tar
+          #ls -l /bin/tar 
+
+      - name: view Variable GITHUB_ENV
+        #run: echo '$GITHUB_ENV IS_PROD: $IS_PROD IS_BETA: $IS_BETA'
+        run: echo "${GITHUB_ENV}  ${IS_PROD}  ${IS_BETA}"  >> $GITHUB_OUTPUT
+
+  deploy:
+    name: Deploy Private  Repository  with ansible and launch docker compose service on a server hosting
+    needs: build_and_test_push  
+    runs-on: ubuntu-latest
+    if: success()  # Exécute le déploiement seulement si le job précédent réussit
+
+    steps:
+
+      #- name: Set ENV for release Stable or Beta 
+      #  run: |
+      #    echo "IS_PROD=false" >> $GITHUB_ENV
+      #    echo "IS_BETA=true" >> $GITHUB_ENV
+
 
       # not prod:  testing only cache for keep package download in /var/cahe/apt/archives/
       - name: 1st root suid tar
         run: |
           export GROUP_ID=$(echo $(id -un))
-          echo $GROUP_ID
+          echo $GROUP_ID >> $GITHUB_OUTPUT
           sudo chown root:$GROUP_ID /bin/tar && sudo chmod ug+ws /bin/tar
-          ls -l /bin/tar
+          #ls -l /bin/tar
 
       - name: Set up caching for APT archives
         uses: actions/cache@v3
@@ -50,98 +232,14 @@ jobs:
         id: git-branch-name
         uses: EthanSK/git-branch-name-action@v1
       - name: Echo the branch name
-        run: echo "Branch name ${GIT_BRANCH_NAME}"
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
- 
-      - name:  whoami
-        run:   pwd && whoami && id  && ls -altr
-
-      - name:  sudo mkdir -p /home/node/app/Docker 
-        run:   sudo mkdir -p /home/node/app/Docker
-
-
-      - name: Set up Docker
-        uses: docker/setup-buildx-action@v2
-
-      - name: Build the backend image with cache
-        uses: docker/build-push-action@v4
-        with:
-          load: true
-          context: .
-          #file: /home/node/app/Docker/Dockerfile.node
-          file: ./Docker/Dockerfile.node
-          cache-from: type=gha,scope=$GITHUB_REF_NAME-Docker-dev
-          cache-to: type=gha,scope=$GITHUB_REF_NAME-Docker-dev,mode=max
-
-
-      - name: build docker compose 
-        run: |
-          #docker compose    --file=./Docker/docker-compose-test.yml --file=Docker/docker-compose-mysql.yml --file=./Docker/docker-compose-app_webpack.yml  --file=./Docker/docker-compose-app_api.yml  --file=./Docker/docker-compose-app_web.yml  build --no-cache
-          docker compose    --file=./Docker/docker-compose-one-image.yml   build --no-cache
-          #/Docker/docker-compose-nginx.yml  
-          docker images 
-          #env && ls -latr  && pwd 
-
-
-      - name: test jest with docker compose 
-        run: |   
-          docker  compose  --file=Docker/docker-compose-one-image.yml  up  -d    --remove-orphans
-          docker ps -a
-          #docker --debug compose  --file=Docker/docker-compose-mysql.yml  up  -d    --remove-orphans 
-          #sudo apt-get update
-          #sudo apt-install  -y install
-          #env && ls -latr  && pwd 
-        
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-
-      - name: Push Docker image to Docker Hub
-        run: |
-          docker push fabstock2/notes_manager:app_one-node
-
-#          docker push fabstock2/notes_manager:app_test-node
-#          docker push fabstock2/notes_manager:app_webpack-node
-#          docker push fabstock2/notes_manager:app_api-node
-#          docker push fabstock2/notes_manager:app_web-node
+        run: echo "Branch name ${GIT_BRANCH_NAME}" >> $GITHUB_OUTPUT
 
 
 
-
-       # not prod:  testing only cache for keep package download in /var/cahe/apt/archives/
-      - name: 2nd root suid tar after dist-upgrade
-        run: |
-          export GROUP_ID=$(echo $(id -un))
-          echo $GROUP_ID
-          sudo chown root:$GROUP_ID /bin/tar && sudo chmod  ug+ws /bin/tar
-          ls -l /bin/tar
-
-      - name: Set ENV for release Stable or Beta 
-        run: |
-          echo "IS_PROD=false" >> $GITHUB_ENV
-          echo "IS_BETA=true" >> $GITHUB_ENV
-
-      - name: view Variable GITHUB_ENV
-        #run: echo '$GITHUB_ENV IS_PROD: $IS_PROD IS_BETA: $IS_BETA'
-        run: echo "${GITHUB_ENV}  ${IS_PROD}  ${IS_BETA}"
-
-
-  deploy:
-    needs: build_and_test
-    runs-on: ubuntu-latest
-    if: success()  # Exécute le déploiement seulement si le job précédent réussit
-
-    steps:
       - name: Checkout Ansible Playbook
         uses: actions/checkout@v4
         with:
           path: ./  # Chemin vers le répertoire contenant le playbook Ansible
-
-
 
       - name: Set up Ansible & collection community.docker
         run: |
@@ -150,7 +248,6 @@ jobs:
           sudo apt-get dist-upgrade -y  
           sudo apt-get -y install ansible 
           ansible-galaxy collection install community.docker
-
 
       - name: Set up SSH agent and add private key
         run: |
@@ -165,19 +262,37 @@ jobs:
         run: |
           echo [server] >ansible/hosts.ini
           IFS=$'\n' INVENTORY=$(echo -e  "${{ secrets.ANSIBLE_HOST }} ansible_host=${{ secrets.ANSIBLE_HOST }} ansible_ssh_extra_args='-o StrictHostKeyChecking=no -o HostKeyAlgorithms=ecdsa-sha2-nistp256'\n") 
-          echo $INVENTORY >>ansible/hosts.ini
-        
+          echo $INVENTORY >>ansible/hosts.ini      
+ 
           echo [server] >ansible/hosts2.ini
           IFS=$'\n' INVENTORY2=$(printf  "%s ansible_host=%s ansible_ssh_extra_args='-o StrictHostKeyChecking=no -o HostKeyAlgorithms=ecdsa-sha2-nistp256'" "${{ secrets.ANSIBLE_HOST }}" "${{ secrets.ANSIBLE_HOST }}")
           echo $INVENTORY2 >>ansible/hosts2.ini
 
-
-
       - name: cat ansible/hosts*
         run: |
-         cat ansible/hosts.ini
-         cat ansible/hosts2.ini
+         cat ansible/hosts.ini >> $GITHUB_OUTPUT
+         cat ansible/hosts2.ini >> $GITHUB_OUTPUT 
         
+      - name: to remove , test ping .... debug prb temporary
+        run: |
+         ping -c 5 37.187.73.64 >> $GITHUB_OUTPUT
+         ping -c 5 cloud.stock.eu.org  >> $GITHUB_OUTPUT
+         cat /etc/resolv.conf >> $GITHUB_OUTPUT
+         cat /etc/hosts >> $GITHUB_OUTPUT
+         ip a s  >> $GITHUB_OUTPUT
+         ip a r >> $GITHUB_OUTPUT
   
-      - name: Run Ansible Playbook deploy
+      - name: Run deploy  Ansible Playbook
         run: ANSIBLE_STDOUT_CALLBACK=yaml ansible-playbook -i ./ansible/hosts2.ini ./ansible/deploy.yml --user=${{ secrets.ANSIBLE_USER }} -v  ||  ansible-playbook -i ./ansible/hosts.ini ./ansible/deploy.yml --user=${{ secrets.ANSIBLE_USER }}
+
+       # not prod:  testing only cache for keep package download in /var/cahe/apt/archives/
+      - name: 2nd root suid tar after dist-upgrade
+        run: |
+          export GROUP_ID=$(echo $(id -un))
+          echo $GROUP_ID >> $GITHUB_OUTPUT
+          sudo chown root:$GROUP_ID /bin/tar && sudo chmod  ug+ws /bin/tar
+          #ls -l /bin/tar
+
+      - name: view Variable GITHUB_ENV
+        #run: echo '$GITHUB_ENV IS_PROD: $IS_PROD IS_BETA: $IS_BETA'
+        run: echo "${GITHUB_ENV}  ${IS_PROD}  ${IS_BETA}"  >> $GITHUB_OUTPUT
