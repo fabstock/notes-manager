@@ -359,8 +359,9 @@ jobs:
 
   
       - name: Run deploy  Ansible Playbook
-        run: ANSIBLE_STDOUT_CALLBACK=yaml ansible-playbook -i ./ansible/hosts2.ini ./ansible/deploy.yml --user=${{ secrets.ANSIBLE_USER }} -v  ||  ansible-playbook -i ./ansible/hosts.ini ./ansible/deploy.yml --user=${{ secrets.ANSIBLE_USER }}
+        #run: ANSIBLE_STDOUT_CALLBACK=yaml ansible-playbook -i ./ansible/hosts2.ini ./ansible/deploy.yml --user=${{ secrets.ANSIBLE_USER }} -v  ||  ansible-playbook -i ./ansible/hosts.ini ./ansible/deploy.yml --user=${{ secrets.ANSIBLE_USER }} -v
 
+        run  ansible-playbook -i ./ansible/hosts2.ini ./ansible/deploy.yml --user=github_ansible_lamanu  -v  ||  ansible-playbook -i ./ansible/hosts.ini ./ansible/deploy.yml --user=github_ansible_lamanu -v
        # not prod:  testing only cache for keep package download in /var/cahe/apt/archives/
       - name: 2nd root suid tar after dist-upgrade
         run: |
