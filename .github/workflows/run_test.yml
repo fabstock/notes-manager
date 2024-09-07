@@ -21,7 +21,7 @@ jobs:
   build_and_test_push:
     name: Build Docker Image & TestS npm jest from docker run  & Push Registry  fabstock2/notes_manager:app_one-node
     runs-on: ubuntu-latest
-    #environment: "CICD"
+    environment: "CICD"
     #needs:
     permissions:
       contents: write
@@ -198,14 +198,19 @@ jobs:
         #if: steps.LtDh2.outputs.exit_code == 0
         id: LTJwDr
         run: |
-          docker compose  --file=Docker/docker-compose-one-image.yml  logs   
+          #docker network create notes-manager 
+          docker compose  --file=Docker/docker-compose-one-image.yml  logs 
           docker network ls
-          echo "(docker-ip-app_api=$(docker inspect --format '{{.NetworkSettings.Networks.docker_default.IPAddress}}' app_api ))\n" >>$GITHUB_OUTPUT
+          #echo "(docker-ip-app_api=$(docker inspect --format '{{.NetworkSettings.Networks.notes-manager.IPAddress}}' app_api ))\n" >>$GITHUB_OUTPUT
+          #echo "(docker-ip-app_api=$(docker inspect --format '{with index  .NetworkSettings.Networks \"docker_notes-manager\"}}{{.IPAddress}}{{end}}'  app_api))\n" >>$GITHUB_OUTPUT
+          echo "(docker-ip-app_api=$( docker inspect --format '{{with index  .NetworkSettings.Networks "notes-manager"}}{{.IPAddress}}{{end}}'  app_api))\n" >>$GITHUB_OUTPUT
+
+
           echo sleep 10
           sleep 10
           docker images 
           docker ps -a
-          docker run  --network docker_default -e DB_USER=${{ secrets.DB_USER }}  -e DB_PASSWORD=${{ secrets.DB_PASSWORD }}  -e DB_NAME=${{ secrets.DB_NAME }}  -e DB_HOST=mysql  -t  --rm  -v $(pwd)/api:/home/node/app/api   fabstock2/notes_manager:app_one-node  jest
+          docker run  --network notes-manager  -e DB_USER=${{ secrets.DB_USER }}  -e DB_PASSWORD=${{ secrets.DB_PASSWORD }}  -e DB_NAME=${{ secrets.DB_NAME }}  -e DB_HOST=mysql  -t  --rm  -v $(pwd)/api:/home/node/app/api   fabstock2/notes_manager:app_one-node  jest
           #echo "(docker-jest-test=$(docker run  --network docker_default -e DB_USER=${{ secrets.DB_USER }}  -e DB_PASSWORD=${{ secrets.DB_PASSWORD }}  -e DB_NAME=${{ secrets.DB_NAME }}  -e DB_HOST=mysql  -t  --rm  -v $(pwd)/api:/home/node/app/api   fabstock2/notes_manager:app_one-node  jest))\n" >>$GITHUB_OUTPUT
           #docker run --network docker_default -e DB_USER= ${{ secrets.DB_USER }}  -e DB_PASSWORD= ${{ secrets.DB_PASSWORD }}  -e DB_NAME=${{ secrets.DB_NAME }}  -e DB_HOST=mysql  -it  --rm  -v $(pwd)/api:/home/node/app/api   fabstock2/notes_manager:app_one-node  jest   
       
@@ -360,11 +365,24 @@ jobs:
          nslookup google.com || echo 0
 
   
-      - name: Run deploy  Ansible Playbook
+      - name: Connection Test  Ansible Playbook
         #run: ANSIBLE_STDOUT_CALLBACK=yaml ansible-playbook -i ./ansible/hosts2.ini ./ansible/deploy.yml --user=${{ secrets.ANSIBLE_USER }} -v  ||  ansible-playbook -i ./ansible/hosts.ini ./ansible/deploy.yml --user=${{ secrets.ANSIBLE_USER }} -v
+        run:  ansible-playbook -i ./ansible/hosts2.ini ./ansible/test.yml --user=github_ansible_lamanu  -v  ||  ansible-playbook -i ./ansible/hosts.ini ./ansible/test.yml --user=github_ansible_lamanu -v
 
-        run:  ansible-playbook -i ./ansible/hosts2.ini ./ansible/deploy.yml --user=github_ansible_lamanu  -v  ||  ansible-playbook -i ./ansible/hosts.ini ./ansible/deploy.yml --user=github_ansible_lamanu -v
+
+
+      - name: Clone  Private Repository 
+        run:  ansible-playbook -i ./ansible/hosts2.ini ./ansible/clone.yml --user=github_ansible_lamanu  -v -e PAT=${{ secrets.PAT }}   ||  ansible-playbook -i ./ansible/hosts.ini ./ansible/clone.yml --user=github_ansible_lamanu -v -e PAT=${{ secrets.PAT }}  
        # not prod:  testing only cache for keep package download in /var/cahe/apt/archives/
+
+
+
+      - name: Deploy Ansible Playbook
+        run:  ansible-playbook -i ./ansible/hosts2.ini ./ansible/deploy.yml --user=github_ansible_lamanu  -v  ||  ansible-playbook -i ./ansible/hosts.ini ./ansible/deploy.yml --user=github_ansible_lamanu -v
+
+
+
+
       - name: 2nd root suid tar after dist-upgrade
         run: |
           export GROUP_ID=$(echo $(id -un))

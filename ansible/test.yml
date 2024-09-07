@@ -1,0 +1,12 @@
+- name: Deploy Docker Container
+  hosts: all
+  gather_facts: false
+  become: no
+  tasks:
+
+  - name: launch docker compose
+    shell: echo $(date)
+
+  - name: launch the docker 
+    shell: docker ps -a
+

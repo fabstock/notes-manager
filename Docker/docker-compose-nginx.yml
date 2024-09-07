@@ -53,19 +53,20 @@ services:
     #  retries: -1
     #  start_period: 40s
     networks:
-      - notes-manager
-
+      notes-manager:
+        ipv4_address: 172.19.0.10  # IP fixe pour app_web
+        
 
 networks:
   #- nonet:
   #default:
   notes-manager:
+    name: notes-manager
     driver: bridge
-    #name: notes-manager
     ipam:
       config:
-        - subnet: 172.18.0.0/16
-          gateway: 172.18.0.1  
+        - subnet: 172.19.0.0/24
+          gateway: 172.19.0.1  
     #external: true
     #driver_opts:
     #  com.docker.network.bridge.host_binding_ipv4: "127.0.0.1"
