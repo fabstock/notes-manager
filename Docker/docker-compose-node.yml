@@ -42,6 +42,8 @@ services:
       - ../web:/home/node/app/web
     #healthcheck:
     #  disable: true
+    networks:
+      - notes-manager
 
 
   app_webpack:
@@ -82,6 +84,8 @@ services:
       - ../web:/home/node/app/web
     #healthcheck:
     #  disable: true
+    networks:
+      - notes-manager
 
 
 
@@ -123,12 +127,14 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-password}
       # DB_PASSWORD:/run/secrets/db_password
       DB_NAME: ${DB_NAME:-default-db}
-
     volumes:
       - ../api:/home/node/app/api
       - ../web:/home/node/app/web
     #healthcheck:
     #  disable: true
+
+    networks:
+      - notes-manager
 
 
   app_api:
@@ -166,6 +172,9 @@ services:
     volumes:
       - ../api:/home/node/app/api
       - ../web:/home/node/app/web
+    networks:
+      - notes-manager
+
 
 
 
@@ -207,6 +216,9 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+    networks:
+      - notes-manager
+
 
 
 
@@ -235,6 +247,9 @@ services:
       - database
       - app_api
       - app_web
+    networks:
+      - notes-manager
+
 
 
 

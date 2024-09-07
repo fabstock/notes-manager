@@ -29,13 +29,18 @@ services:
       #MYSQL_PASSWORD: ${DB_PASSWORD}
       #MYSQL_DATABASE: ${DB_NAME}
 
-    #depends_on:
-      # app_web:
-      #  condition: service_healthy
+    depends_on:
+      #  app_web:
+      #    condition: service_healthy
       #database:
       #  condition: service_healthy
       #app_test:
       #  condition: service_completed_successfully
+      app_api:
+        condition: service_healthy
+        #condition: service_completed_successfully
+
+
 
     #depends_on:
     #  - database
@@ -47,17 +52,33 @@ services:
     #  timeout: 10s
     #  retries: -1
     #  start_period: 40s
-
-
+    networks:
+      - notes-manager
 
 
 networks:
-  nonet:
+  #- nonet:
   #default:
-  bridge:
-    name: notes-manager
+  notes-manager:
+    driver: bridge
+    #name: notes-manager
+    ipam:
+      config:
+        - subnet: 172.18.0.0/16
+          gateway: 172.18.0.1  
+    #external: true
     #driver_opts:
     #  com.docker.network.bridge.host_binding_ipv4: "127.0.0.1"
+ 
+
+
+#networks:
+#  nonet:
+#  #default:
+#  bridge:
+#    name: notes-manager
+#    #driver_opts:
+#    #  com.docker.network.bridge.host_binding_ipv4: "127.0.0.1"
  
 
 

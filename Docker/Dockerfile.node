@@ -1,7 +1,7 @@
 FROM node:20-bookworm-slim
-#RUN apt-get update 
-#RUN DEBIAN_FRONTEND=noninteractive apt-get -qq  dist-upgrade
-#RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install sudo  inetutils-ping lsof vim rsync  
+RUN apt-get update 
+RUN DEBIAN_FRONTEND=noninteractive apt-get -qq  dist-upgrade
+RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install sudo  curl inetutils-ping lsof vim rsync  
 RUN apt-get clean
 
 
