@@ -22,7 +22,8 @@
     shell: cd deploy docker compose --env-file  Docker/.env_prod -f Docker/docker-compose-one-image.yml  down || echo 0 
 
   - name:  Launch the docker compose  one image 
-    shell: cd deploy && docker compose --env-file  Docker/.env_prod -f Docker/docker-compose-one-image.yml up 
+    shell: cd deploy && docker compose --env-file  Docker/.env_prod -f Docker/docker-compose-one-image.yml -f Docker/docker-compose-nginx.yml  up  -d 
+
  
 
 
