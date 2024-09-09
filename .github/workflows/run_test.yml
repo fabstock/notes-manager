@@ -41,37 +41,6 @@ jobs:
           echo  $GITHUB_OUTPUT
         shell: bash
 
-
-   
-      - name: Git branch name
-        id: git-branch-name
-        uses: EthanSK/git-branch-name-action@v1
-
-      - name: Echo the branch name
-        #if: ${{ env.GIT_BRANCH_NAME == 'superbranch' }}
-        run: echo "Branch name ${GIT_BRANCH_NAME}"
-
-      - name: Extract branch name
-        shell: bash
-        id: get_extract_branch
-        run: |
-          echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
-          #after that, I can use it in the next steps with steps.<step_id>.outputs.branch:
-          echo ${{ steps.get_extract_branch.outputs.branch }}
-
-      #- name: Get tag name
-      #  run: |
-      #    echo "Tag name: ${{ env.GITHUB_REF#refs/tags/ }}"
-
-      - name: Get tag name
-        id: get_tag
-        #run: echo Tag name: ${{ env.GITHUB_REF#refs/tags/ }}
-        run: |
-          echo "branch: ????" 
-        #echo Tag name: ${{ env.GIT_BRANCH_NAME }}
-        #echo Tag name: ${{ env.GITHUB_REF#refs/tags/ }}
-
-
       - name: Set ENV IS_PROD or IS_STAGE 
         run: |
           echo "IS_PROD=false" >> $GITHUB_ENV
@@ -98,19 +67,6 @@ jobs:
             ${{ runner.os }}-apt-archives-
         #${{ runner.os }}-apt-archives-
       
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ env.GIT_BRANCH_NAME }}
-          #sparse-checkout: |
-          #  Docker
-          #sparse-checkout-cone-mode: false
-
-      - name: Temp
-        working-directory: .
-        run: ls -latr
-        shell: bash
-
       - name: Set up caching for dockerd home
         id: cache_docker
         uses: actions/cache@v4
@@ -118,18 +74,32 @@ jobs:
           # save-always:v4
           path: /var/lib/docker
           #key: ${{ runner.os }}-docker-home-${{ hashFiles('hasfiles.txt') }}
-          key: ${{ runner.os }}-${{ env.GIT_BRANCH_NAME }}-docker-home-
+          key: ${{ runner.os }}-docker-home-
           restore-keys: |
-            ${{ runner.os }}-${{ env.GIT_BRANCH_NAME }}-docker-home-
+            ${{ runner.os }}-docker-home-
         #${{ runner.os }}-apt-archives-
 
 
+
    
+      - name: Git branch name
+        id: git-branch-name
+        uses: EthanSK/git-branch-name-action@v1
+      - name: Echo the branch name
+        #if: ${{ env.GIT_BRANCH_NAME == 'superbranch' }}
+        run: echo "Branch name ${GIT_BRANCH_NAME}"
 
-      #- name: Get tag name
-      #  run: |
-      #    echo "Tag name: ${{ env.GITHUB_REF#refs/tags/ }}"
+      - name: Extract branch name
+        shell: bash
+        id: extract_branch
+        run: |
+            echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+            #after that, I can use it in the next steps with steps.<step_id>.outputs.branch:
+            echo ${{ steps.extract_branch.outputs.branch }}
 
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
       
       #- name:  Whoami
       #  run:   pwd && whoami && id  && ls -altr
@@ -160,12 +130,11 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           load: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/${{ github.event.repository.name }}:app_one-node
           context: .
           #file: /home/node/app/Docker/Dockerfile.node
           file: ./Docker/Dockerfile.node
-          cache-from: type=gha,scope=${{ runner.os }}-${{ env.GIT_BRANCH_NAME }}-Docker-home-
-          cache-to: type=gha,scope=${{ runner.os }}-${{ env.GIT_BRANCH_NAME }}-Docker-home-,mode=max
+          cache-from: type=gha,scope=$GITHUB_REF_NAME-Docker-dev
+          cache-to: type=gha,scope=$GITHUB_REF_NAME-Docker-dev,mode=max
     
       - name: Docker Build STATUS
         run: |
@@ -177,9 +146,6 @@ jobs:
             echo "Build successful"
           fi
    
-
-
-
 
       - name: Build docker compose build
         id: Bdcb 
@@ -203,14 +169,7 @@ jobs:
           else
             echo "Build successful"
           fi
-          docker ps -a 
-          docker images
-          docker network ls 
-          docker volume ls 
-          #docker images prune -f  
-          #docker volume prune -f  
-          #docker network prune -f  
-          docker system prune -af --volumes
+          docker images 
 
 
 
