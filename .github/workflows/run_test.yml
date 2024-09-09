@@ -131,6 +131,8 @@ jobs:
         with:
           load: true
           context: .
+          push: true
+
           #file: /home/node/app/Docker/Dockerfile.node
           file: ./Docker/Dockerfile.node
           cache-from: type=gha,scope=$GITHUB_REF_NAME-Docker-dev
