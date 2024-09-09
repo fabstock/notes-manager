@@ -98,6 +98,19 @@ jobs:
             ${{ runner.os }}-apt-archives-
         #${{ runner.os }}-apt-archives-
       
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.GIT_BRANCH_NAME }}
+          #sparse-checkout: |
+          #  Docker
+          #sparse-checkout-cone-mode: false
+
+      - name: Temp
+        working-directory: .
+        run: ls -latr
+        shell: bash
+
       - name: Set up caching for dockerd home
         id: cache_docker
         uses: actions/cache@v4
@@ -117,14 +130,6 @@ jobs:
       #  run: |
       #    echo "Tag name: ${{ env.GITHUB_REF#refs/tags/ }}"
 
-
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          sparse-checkout: |
-            ./Docker/
-          sparse-checkout-cone-mode: false
       
       #- name:  Whoami
       #  run:   pwd && whoami && id  && ls -altr
@@ -155,6 +160,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           load: true
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/${{ github.event.repository.name }}:app_one-node
           context: .
           #file: /home/node/app/Docker/Dockerfile.node
           file: ./Docker/Dockerfile.node
