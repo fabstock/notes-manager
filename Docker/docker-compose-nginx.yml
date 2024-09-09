@@ -40,9 +40,6 @@ services:
       app_api:
         condition: service_healthy
         #condition: service_completed_successfully
-
-
-
     #depends_on:
     #  - database
     #  - app_api

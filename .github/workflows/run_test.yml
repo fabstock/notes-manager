@@ -22,6 +22,10 @@ jobs:
     name: Build Docker Image & TestS npm jest from docker run  & Push Registry  fabstock2/notes_manager:app_one-node
     runs-on: ubuntu-latest
     environment: "CICD"
+    env:
+      API_BASE_URL: "https://notes.stock.eu.org"
+      WEB_BASE_URL: "https://notes.stock.eu.org"
+
     #needs:
     permissions:
       contents: write
@@ -256,7 +260,7 @@ jobs:
         run: echo "${GITHUB_ENV}  ${IS_PROD}  ${IS_BETA}"  
 
   deploy:
-    name: Deploy Private  Repository  with ansible and launch docker compose service on a server hosting
+    name: Deploy Private  Repository  with Ansible and launch Docker Compose Service on a server hosting
     needs: build_and_test_push  
     runs-on: ubuntu-latest
     if: success()  # Exécute le déploiement seulement si le job précédent réussit

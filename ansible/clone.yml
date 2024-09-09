@@ -1,7 +1,7 @@
 
 #ansible-playbook -i ./ansible/hosts.ini ./ansible/clone.yml  -e secret.yml  --user=github_ansible_lamanu  -vv   --ask-vault-password
 
-- name: Deploy Docker Container
+- name: Git Private Repository && Docker Container
   hosts: all
   gather_facts: false
   become: no

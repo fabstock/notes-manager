@@ -1,4 +1,4 @@
-- name: Deploy Docker Container
+- name: Prepare and down Docker Container
   hosts: all
   gather_facts: false
   become: no
@@ -9,4 +9,30 @@
 
   - name: launch the docker 
     shell: docker ps -a
+
+
+  - name: Create Network  Docker
+    shell: |
+      if [ -z "$(docker network ls --filter name=^notes-manager$ --format '{{'{{'}}.Name{{'}}'}}' )" ];then
+        echo docker network create  --subnet "172.19.0.0/24" notes-manager
+      else
+        echo 'docker network exist'
+      fi
+    args:
+      executable: /bin/bash
+    register: docker_network
+
+
+ 
+
+
+ - name:  Checkout dev branch
+    shell: |
+      if [ -d  "deploy" ];then
+          echo "New deployement detecté   down & downdeploy "
+          cd deploy  && docker compose --env-file  Docker/.env_prod -f Docker/docker-compose-one-image.yml -f Docker/docker-compose-nginx.yml  down || echo 0
+          cd .. && rm -rf deploy || echo 0
+      else
+          "echo first deployement"
+      fi
 

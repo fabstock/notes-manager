@@ -23,8 +23,8 @@ services:
       #  condition: service_completed_successfully
       #app_webpack:
       #  condition: service_completed_successfully
-    ports:
-      - "3000:3000"
+    #ports:
+      #- "3000:3000"
       #- "3000:3000"
       #- ":3000"
     environment:
