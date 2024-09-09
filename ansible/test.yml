@@ -26,7 +26,7 @@
  
 
 
- - name:  Checkout dev branch
+  - name:  Checkout dev branch
     shell: |
       if [ -d  "deploy" ];then
           echo "New deployement detecté   down & downdeploy "

@@ -4,7 +4,22 @@
   become: no
   tasks:
 
-  - name: Create Network  Docker 
+  - name:  Checkout dev branch  
+    shell: |
+      if [ -d  "deploy" ];then
+          cd deploy  && docker compose --env-file  Docker/.env_prod -f Docker/docker-compose-one-image.yml -f Docker/docker-compose-nginx.yml  down 
+          git checkout dev  && git ls-files 
+      else
+          echo "repo n'existe pas"
+      fi 
+    register: is_repo_exist  
+
+  - name:  Launch the docker compose  one image 
+    shell: cd deploy && docker compose --env-file  Docker/.env_prod -f Docker/docker-compose-one-image.yml -f Docker/docker-compose-nginx.yml  up  -d 
+
+
+
+  - name: Create Network  Docker
     shell: |
       if [ -z "$(docker network ls --filter name=^notes-manager$ --format '{{'{{'}}.Name{{'}}'}}' )" ];then
         echo docker network create  --subnet "172.19.0.0/24" notes-manager
@@ -13,25 +28,9 @@
       fi
     args:
       executable: /bin/bash
-    register: docker_network
-
-
-  - name:  Checkout dev branch  
-    shell: |
-      if [ -d  "deploy" ];then
-          cd deploy  && docker compose --env-file  Docker/.env_prod -f Docker/docker-compose-one-image.yml -f Docker/docker-compose-nginx.yml  down || echo 0 
-      else
-          
-          git checkout dev  && git ls-files 
-      fi 
-
-  - name:  Down the docker compose  one image 
-    shell: cd deploy docker compose --env-file  Docker/.env_prod -f Docker/docker-compose-one-image.yml  down || echo 0 
-
-  - name:  Launch the docker compose  one image 
-    shell: cd deploy && docker compose --env-file  Docker/.env_prod -f Docker/docker-compose-one-image.yml -f Docker/docker-compose-nginx.yml  up  -d || echo 0 
+    register: is_docker_network
 
  
   - name : patch cors with webpack 
     shell: |
-      docker run --network notes-manager  --user 0:0   -e API_BASE_URL=https://notes.stock.eu.org  -e WEB_BASE_URL=https://notes.stock.eu.org   -e DB_PASSWORD=notes_user1 -e DB_NAME=notes_manager   -e DB_HOST=mysql  -it  --rm  -v  $(pwd)/src:/home/node/app/src     -v $(pwd)/dist:/home/node/app/dist       -v $(pwd)/web:/home/node/app/web  -v $(pwd)/api:/home/node/app/api  fabstock2/notes_manager:app_one-node ./build.webpack.sh
+      cd deploy && docker run --network notes-manager  --user 0:0   -e API_BASE_URL=https://notes.stock.eu.org  -e WEB_BASE_URL=https://notes.stock.eu.org   -e DB_PASSWORD=notes_user1 -e DB_NAME=notes_manager   -e DB_HOST=mysql  -it  --rm  -v  $(pwd)/src:/home/node/app/src     -v $(pwd)/dist:/home/node/app/dist       -v $(pwd)/web:/home/node/app/web  -v $(pwd)/api:/home/node/app/api  fabstock2/notes_manager:app_one-node ./build.webpack.sh
