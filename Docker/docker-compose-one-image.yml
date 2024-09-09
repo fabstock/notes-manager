@@ -1,5 +1,6 @@
 ---
 #version: '3.8'
+name: notes-manager
 
 services:
 
@@ -43,7 +44,7 @@ services:
       - ../web:/home/node/app/web
     networks:
       notes-manager:
-        ipv4_address: 172.19.0.11  # IP fixe pour app_web
+        ipv4_address: 10.90.90.11  # IP fixe pour app_web
 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/api/notes"] # Assurez-vous que /health est un endpoint qui renvoie 200 si l'API est prête
@@ -107,7 +108,7 @@ services:
       #start_period: 40s
     networks:
       notes-manager:
-        ipv4_address: 172.19.0.12  # IP fixe pour app_web
+        ipv4_address: 10.90.90.12  # IP fixe pour app_web
 
 
 
@@ -148,9 +149,7 @@ services:
       retries: 5
     networks:
       notes-manager:
-        ipv4_address: 172.19.0.13  # IP fixe pour app_web
-
-
+        ipv4_address: 10.90.90.13  # IP fixe pour app_web
 
 
 
@@ -164,11 +163,14 @@ networks:
     driver: bridge
     ipam:
       config:
-        - subnet: 172.19.0.0/16
-          gateway: 172.19.0.1  
+        - subnet: 10.90.90.0/24
+          gateway: 10.90.90.1 
     #external: true
     #driver_opts:
     #  com.docker.network.bridge.host_binding_ipv4: "127.0.0.1"
+
+
+
  
 volumes:
   mysql_volume:

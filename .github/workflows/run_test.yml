@@ -1,30 +1,34 @@
 name: |
-   Build one (image docker) , Test (npm jest), 
-   Push and Deploy with Docker Compose Containers on ...           
-   This is a poor man pipeline  ,                               
-   and  Not Optimize & not Secure pipeline for learning           
-
-
-
+   This is a poor man pipeline,  
+   and  Not Optimize & not Secure pipeline for learning  
+   Build one (image docker),  
+   Test (npm jest),  
+   Push and Deploy with Docker Compose Containers on ...  
+   
 on:
   workflow_dispatch:
   push:
     branches:
       - dev
   pull_request:
-    branches: "main"
+    branches: ["main"]
+
    
 permissions:
   contents: write  # Donne les permissions pour écrire les contenus du dépôt
 
 jobs:
-  build_and_test_push:
-    name: Build Docker Image & TestS npm jest from docker run  & Push Registry  fabstock2/notes_manager:app_one-node
+  build_and_push:
+    name: Build Docker Image from docker run  & Push Registry 
     runs-on: ubuntu-latest
+    #runs-on: self-hosted
     environment: "CICD"
     env:
       API_BASE_URL: "https://notes.stock.eu.org"
       WEB_BASE_URL: "https://notes.stock.eu.org"
+      DOCKERAPP_VERSION: "node"
+      TEST_TAG: user/app:test
+      LATEST_TAG: user/app:latest
 
     #needs:
     permissions:
@@ -98,6 +102,27 @@ jobs:
             echo ${{ steps.extract_branch.outputs.branch }}
 
 
+
+
+        
+      - name: Apt dist-upgrade
+        run: |
+          export DEBIAN_FRONTEND=noninteractive
+          sudo apt-get update -y 
+          sudo apt-get dist-upgrade -y  
+          sudo apt clean 
+
+        
+      - name: to remove , test ping .... debug prb temporary
+        run: |
+         sudo ping -c 1 37.187.73.64 || echo 0  
+         sudo ping -c 1 cloud.stock.eu.org || echo 0 
+         cat /etc/resolv.conf || echo 0 
+         cat /etc/hosts  || echo 0
+         ip a s || echo 0
+         ip a r || echo 0
+         nslookup google.com || echo 0
+
       - name: Checkout repository
         uses: actions/checkout@v4
       
@@ -106,6 +131,31 @@ jobs:
 
       #- name:  sudo mkdir -p /home/node/app/Docker
       #  run:   sudo mkdir -p /home/node/app/Docker
+      
+
+      - name: Prepare
+        id: prepare
+        run: |
+          DOCKER_IMAGE=${{ secrets.DOCKER_USERNAME }}/${GITHUB_REPOSITORY#*/}
+          VERSION=latest
+          SHORTREF=${GITHUB_SHA::8}
+
+          # If this is git tag, use the tag name as a docker tag
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+          fi
+          TAGS="${DOCKER_IMAGE}:${VERSION},${DOCKER_IMAGE}:${SHORTREF}"
+
+          # If the VERSION looks like a version number, assume that
+          # this is the most recent version of the image and also
+          # tag it 'latest'.
+          if [[ $VERSION =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+            TAGS="$TAGS,${DOCKER_IMAGE}:latest"
+          fi
+
+          # Set output parameters.
+          echo ::set-output name=tags::${TAGS}
+          echo ::set-output name=docker_image::${DOCKER_IMAGE}
 
 
 
@@ -113,7 +163,9 @@ jobs:
         id: SuD
         #if: steps.Udcu.outputs.exit_code == 0
         uses: docker/setup-buildx-action@v3
-
+        with:
+          buildkitd-flags: --debug 
+          
 
       - name: Login to Docker Hub
         id: LtDh
@@ -123,20 +175,40 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
  
+      
+      # Add a timestamp step before the build step
+      - name: Prepare timestamp
+        id: prep
+        run: echo "::set-output name=timestamp::$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
 
       - name: Build the backend image with cache
         id: Btbiwc
         if: steps.LtDh.outputs.exit_code == 0
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v6
         with:
-          load: true
-          context: .
+          #load: true
           push: true
-
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/${{ github.event.repository.name }}:app_one-${{ env.DOCKERAPP_VERSION }}
+          context: .
           #file: /home/node/app/Docker/Dockerfile.node
           file: ./Docker/Dockerfile.node
-          cache-from: type=gha,scope=$GITHUB_REF_NAME-Docker-dev
-          cache-to: type=gha,scope=$GITHUB_REF_NAME-Docker-dev,mode=max
+          labels: |
+            org.opencontainers.image.title=MyApp
+            org.opencontainers.image.description="This is MyApp with multi-architecture support"
+            org.opencontainers.image.licenses=MIT
+            org.opencontainers.image.url=${{ env.WEB_BASE_URL }}
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.created=${{ steps.prep.outputs.timestamp }}
+            org.opencontainers.image.version=${{ github.ref_name }}
+          platforms: linux/amd64
+          cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/${{ github.event.repository.name }}:app_one-${{ env.DOCKERAPP_VERSION }}
+          cache-to: type=inline
+          #cache-from: type=registry,ref=user/app:buildcache
+          #cache-to: type=registry,ref=user/app:buildcache,mode=max
+          #cache-from: type=gha,scope=$GITHUB_REF_NAME-Docker-dev
+          #cache-to: type=gha,scope=$GITHUB_REF_NAME-Docker-dev,mode=max
+
     
       - name: Docker Build STATUS
         run: |
@@ -149,7 +221,7 @@ jobs:
           fi
    
 
-      - name: Build docker compose build
+      - name: Build docker compose manual build
         id: Bdcb 
         #if: steps.Build the backend image with cache.outputs.Build_STATUS == 0
         if: steps.LtDh.outputs.exit_code == 0
@@ -184,6 +256,9 @@ jobs:
           #echo "(docker-ip-app_api=$(docker inspect app_api   |  jq '.[].NetworkSettings.IPAddress'))\n" >>$GITHUB_OUTPUT
           docker  compose  --file=Docker/docker-compose-one-image.yml  up  -d    --remove-orphans
 
+           
+
+
 
       - name: Re Login to Docker Hub
         id: LtDh2
@@ -199,6 +274,79 @@ jobs:
         run: |
           docker build --no-cache -t fabstock2/notes_manager:app_test-node  -f Docker/Dockerfile.node . 
  
+
+
+  jest_tests:
+    needs: build_and_push 
+    name: TestS npm jest with docker run  
+    runs-on: ubuntu-latest
+    environment: "CICD"
+    env:
+      API_BASE_URL: "https://notes.stock.eu.org"
+      WEB_BASE_URL: "https://notes.stock.eu.org"
+      TEST_TAG: user/app:test
+      LATEST_TAG: user/app:latest
+
+    steps:
+
+      #- name: Set ENV for release Stable or Beta 
+      #  run: |
+      #    echo "IS_PROD=false" >> $GITHUB_ENV
+      #    echo "IS_BETA=true" >> $GITHUB_ENV
+
+
+      # not prod:  testing only cache for keep package download in /var/cahe/apt/archives/
+      - name: 1st root suid tar
+        run: |
+          export GROUP_ID=$(echo $(id -un))
+          echo $GROUP_ID 
+          sudo chown root:$GROUP_ID /bin/tar && sudo chmod ug+ws /bin/tar
+          #ls -l /bin/tar
+          
+      - name: Set up caching for APT archives
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt/archives
+          #key: ${{ runner.os }}-apt-archives-${{ hashFiles('apt-packages.txt') }}
+          key: ${{ runner.os }}-apt-archives-
+          restore-keys: |
+            ${{ runner.os }}-apt-archives-
+        #${{ runner.os }}-apt-archives-
+
+
+      - name: Git branch name
+        id: git-branch-name
+        uses: EthanSK/git-branch-name-action@v1
+      - name: Echo the branch name
+        run: echo "Branch name ${GIT_BRANCH_NAME}"
+
+
+      - name: Check Not Prod ls -altr
+        run: |
+          ls -altr
+          docker images 
+          docker ps -a 
+          docker network ls 
+          docker volume ls 
+ 
+
+      - name: Checkout for jest tests
+        uses: actions/checkout@v4
+        with:
+          path: ./  # Chemin vers le répertoire contenant le playbook Ansible
+
+
+      - name: Up docker compose up -d infra 3 services nodejs api & web & mariadb 
+        id: Udcu
+        #if: steps.Build docker compose build.outputs.Build_STATUS == 0
+        #if: steps.Bdcb.outputs.exit_code == 0
+        run: |   
+          #docker --debug compose  --file=Docker/docker-compose-mysql.yml  up  -d    --remove-orphans 
+          #echo "(docker-ip-app_api=$(docker inspect app_api   |  jq '.[].NetworkSettings.IPAddress'))\n" >>$GITHUB_OUTPUT
+          docker  compose  --file=Docker/docker-compose-one-image.yml  up  -d    --remove-orphans
+
+
+
       - name: Launch Test Jest with Docker run
         if: steps.Udcu.outputs.exit_code == 0
         #if: steps.LtDh2.outputs.exit_code == 0
@@ -212,8 +360,6 @@ jobs:
           echo "(docker-ip-app_api=$( docker inspect --format '{{with index  .NetworkSettings.Networks "notes-manager"}}{{.IPAddress}}{{end}}'  app_api))\n" >>$GITHUB_OUTPUT
 
 
-          echo sleep 10
-          sleep 10
           docker images 
           docker ps -a
           docker run  --network notes-manager  -e DB_USER=${{ secrets.DB_USER }}  -e DB_PASSWORD=${{ secrets.DB_PASSWORD }}  -e DB_NAME=${{ secrets.DB_NAME }}  -e DB_HOST=mysql  -t  --rm  -v $(pwd)/api:/home/node/app/api   fabstock2/notes_manager:app_one-node  jest
@@ -222,7 +368,7 @@ jobs:
       
       - name: jest TESTs_STATUS     
         #if: steps.LtDh2.outputs.exit_code == 0
-        if: steps.LtDh2.outputs.exit_code == 0
+        if: steps.Udcu.outputs.exit_code == 0
         run: |
           export TESTs_STATUS=$?
           if [ $TESTs_STATUS -ne 0 ]; then
@@ -237,9 +383,21 @@ jobs:
         #if: env.TESTs_STATUS = '0' 
         #if: env.IS_PROD == 'true' 
         
+      - name: Re Login to Docker Hub
+        id: LtDh2
+        if: steps.Udcu.outputs.exit_code == 0
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: build mano test !! 
+        id: debug_build
+        run: |
+          docker build --no-cache -t fabstock2/notes_manager:app_test-node  -f Docker/Dockerfile.node . 
 
       - name: Push Docker image to Docker Hub
-        if: steps.LTJwDr.outputs.exit_code == 0
+        if: steps.debug_build.outputs.exit_code == 0
         #if: steps.Launch Test Jest with Docker run.outputs TESTs_STATUS == 0
         run: |
           docker push fabstock2/notes_manager:app_one-node
@@ -263,7 +421,7 @@ jobs:
 
   deploy:
     name: Deploy Private  Repository  with Ansible and launch Docker Compose Service on a server hosting
-    needs: build_and_test_push  
+    needs: [build_and_push,jest_tests]  
     runs-on: ubuntu-latest
     if: success()  # Exécute le déploiement seulement si le job précédent réussit
 
@@ -284,7 +442,7 @@ jobs:
           #ls -l /bin/tar
 
       - name: Set up caching for APT archives
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: /var/cache/apt/archives
           #key: ${{ runner.os }}-apt-archives-${{ hashFiles('apt-packages.txt') }}
@@ -324,7 +482,7 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519  # Définit les permissions correctes pour la clé
           /bin/echo "${{ secrets.ANSIBLE_SSH_KEY3 }}" > ~/.ssh/id_rsa  # Crée un fichier pour la clé privée
           chmod 600 ~/.ssh/id_rsa  # Définit les permissions correctes pour la clé
-      
+
       - name:
         run: |
           # bad with ecdsa 
@@ -359,19 +517,8 @@ jobs:
         run: |
          cat ansible/hosts.ini 
          cat ansible/hosts2.ini 
-        
-      - name: to remove , test ping .... debug prb temporary
-        run: |
-         sudo ping -c 3 37.187.73.64 || echo 0  
-         sudo ping -c 3 cloud.stock.eu.org || echo 0 
-         cat /etc/resolv.conf || echo 0 
-         cat /etc/hosts  || echo 0
-         ip a s || echo 0
-         ip a r || echo 0
-         nslookup google.com || echo 0
-
   
-      - name: Connection Test  Ansible Playbook
+      - name: Connection Test Ansible Playbook
         #run: ANSIBLE_STDOUT_CALLBACK=yaml ansible-playbook -i ./ansible/hosts2.ini ./ansible/deploy.yml --user=${{ secrets.ANSIBLE_USER }} -v  ||  ansible-playbook -i ./ansible/hosts.ini ./ansible/deploy.yml --user=${{ secrets.ANSIBLE_USER }} -v
         run:  ansible-playbook -i ./ansible/hosts2.ini ./ansible/test.yml --user=github_ansible_lamanu  -v  ||  ansible-playbook -i ./ansible/hosts.ini ./ansible/test.yml --user=github_ansible_lamanu -v
 
