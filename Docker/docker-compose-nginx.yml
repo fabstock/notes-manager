@@ -7,6 +7,11 @@ services:
     container_name: nginx_proxy
     hostname: nginx_proxy
     image: nginx:alpine
+    labels:
+      - "traefik.enable=true"  # Activer Traefik pour ce service
+      - "traefik.http.routers.app_api.rule=Host(`notes.stock.eu.org`)"  # Remplace `example.com` par ton domaine
+      - "traefik.http.routers.app_api.entrypoints=web"  # Utiliser l'entrypoint défini
+      - "traefik.http.services.app_api.loadbalancer.server.port=80"  # Port de service si différent de 80
     #restart: always
     restart: unless-stopped
     volumes:
